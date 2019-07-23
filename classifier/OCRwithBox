@@ -1,0 +1,226 @@
+# import the necessary packages
+from imutils.object_detection import non_max_suppression
+import numpy as np
+import pytesseract
+import argparse
+import cv2
+import os
+from imutils.video import VideoStream
+from imutils.video import FPS
+from imutils.object_detection import non_max_suppression
+import imutils
+
+
+# TODO select video or image
+# TODO add binarization threshold
+# TODO add coefficients argument
+# TODO Add erosion
+
+# TODO Make classes
+# TODO Change font
+
+
+# Parser arguments
+ap = argparse.ArgumentParser()
+ap.add_argument("-m", "--media", type=str, help="path to input media")
+ap.add_argument("-t", "--type", type=str, default="image", help="Video or image")
+ap.add_argument("-show", "--show", type=str, default="edited", help="Show processed or original image")
+
+ap.add_argument("-w", "--targetW", type=int, default=600, help="nearest multiple of 32 for resized width")
+ap.add_argument("-h", "--targetH", type=int, default=500, help="nearest multiple of 32 for resized height")
+
+ap.add_argument("-bwl", "--boxWL", type=int, default=130,
+                help="Box width size, left")
+ap.add_argument("-bwr", "--boxWR", type=int, default=130,
+                help="Box width size, right")
+
+ap.add_argument("-bht", "--boxHT", type=int, default=35,
+                help="Box height size, top")
+ap.add_argument("-bhb", "--boxHB", type=int, default=35,
+                help="Box height size, bottom")
+
+ap.add_argument("-oem", "--oem", type=str, default="1",
+                help="OEM SELECTION, model")
+ap.add_argument("-psm", "--psm", type=str, default="1",
+                help="PSM SELECTION, read line")
+
+args = vars(ap.parse_args())
+borderType = cv2.BORDER_CONSTANT
+
+# Used for testing
+# Desired sizes for image
+# targetW, targetH = 600, 500
+# boxWL, boxWR = 130, 130
+# boxHT, boxHB = 35, 25
+
+
+
+if args["type"] == "video":
+    # Set up the video stream
+    vs = cv2.VideoCapture(args["video"])
+
+    # start the FPS throughput estimator
+    fps = FPS().start()
+
+    # loop over frames from the video stream
+    while True:
+        # grab the current frame, then handle if we are using a
+        # VideoStream or VideoCapture object
+        frame = vs.read()
+        frame = frame[1] if args.get("video", False) else frame
+
+        # check to see if we have reached the end of the stream
+        if frame is None:
+            break
+
+        # resize the frame, maintaining the aspect ratio
+        frame = imutils.resize(frame, width=1000)
+        orig = frame.copy()
+
+        cv2.imshow("Text Detection", orig)
+        key = cv2.waitKey(1) & 0xFF
+
+        # if the `q` key was pressed, break from the loop
+        if key == ord("q"):
+            break
+
+    # stop the timer and display FPS information
+    fps.stop()
+    print("[INFO] elasped time: {:.2f}".format(fps.elapsed()))
+    print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
+
+    # otherwise, release the file pointer
+
+    vs.release()
+
+    # close all windows
+    cv2.destroyAllWindows()
+
+
+
+
+
+
+
+else:
+    image = cv2.imread("C:/Users/Augus/PycharmProjects/scanner/images/arlamjolk3.png")
+    orig = image.copy()
+
+    # Extract original sizes
+    (origH, origW) = image.shape[:2]
+
+
+    # Proportion of change
+    rW = origW / float(args["targetW"])
+    rH = origH / float(args["targetH"])
+
+    # Resize image
+    image_resized = cv2.resize(image, (args["targetW"], args["targetH"]))
+
+    # Extract new sizes
+    (H, W) = image_resized.shape[:2]
+
+    # Decide extracted box
+    startW, startH = int((W/2)-args["boxWL"]), int((H/2)-args["boxHT"])
+    endW, endH = int((W/2)+args["boxWR"]), int((H/2)+args["boxHB"])
+
+    # extract box
+    crop_img = image_resized[startH:endH, startW:endW]
+
+    # Greysacle image
+    coefficients = [0.299, 0.587, 0.114]  # Gives blue channel all the weight
+
+    # coefficients = [0.114, 0.587, 0.299]  # for standard gray conversion,
+    coefficients = np.array(coefficients).reshape((1, 3))
+    greyImage = cv2.transform(crop_img, coefficients)
+
+    # Binarization
+    ret, thresh1 = cv2.threshold(greyImage, 140, 245, cv2.THRESH_BINARY)
+    binaryImage = cv2.merge((thresh1, thresh1, thresh1))
+
+    # Erosion
+    # erosion_type = cv2.MORPH_ELLIPSE  # cv2.MORPH_RECT, cv2.MORPH_CROSS, cv2.MORPH_ELLIPSE
+    # erosion_size = 1
+    # element = cv2.getStructuringElement(erosion_type, (2 * erosion_size + 1, 2 * erosion_size + 1),
+    #                                   (erosion_size, erosion_size))
+    # q = cv2.erode(image, element)
+
+    # Pad image
+    crop_img_padded = cv2.copyMakeBorder(binaryImage, startH, int(H-endH), startW, int(W-endW), borderType, None, (255, 255, 255))
+
+
+    # write box, on original image
+    cv2.rectangle(image, (int(startW*rW), int(startH*rH)), (int(endW*rW), int(endH*rH)), (0, 232, 0), 2)
+
+    # Config for OCR reader
+    # config = ("-l eng --oem " + args["oem"] + " --psm " + args["psm"] + " -c tessedit_char_whitelist=0123456789")
+    config = ("-l eng --oem " + str(args["oem"]) + " --psm " + str(args["psm"]))
+
+    # text = pytesseract.image_to_string(roi, config=config)
+    text = pytesseract.image_to_string(crop_img_padded, config=config)
+    testText = "fag"
+
+    # Put text on image
+    cv2.putText(image, testText, (int(startW*rW), int(startH*rH) - 20),
+                cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
+
+
+    # display the text OCR'd by Tesseract
+    print("OCR TEXT")
+    print("========")
+    print(text)
+
+    # show the output image
+    # cv2.imshow("car_wash", crop_img)
+    # cv2.imshow("car_wash", image_resized)
+    # cv2.imshow("car_wash", crop_img_padded)
+    # cv2.imshow("car_wash", image)
+    # cv2.imshow("car_wash", binaryImage)
+
+
+
+
+    if "original":
+        cv2.imshow("car_wash", image)
+
+    if "edited":
+        cv2.imshow("car_wash", crop_img_padded)
+
+     cv2.waitKey(1)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
