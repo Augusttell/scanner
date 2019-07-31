@@ -32,6 +32,10 @@ def morphology(image, flow, sizeW, sizeH, iterations=1):
 # Example use
 # python preProcessing.py -m C:\Users\Augus\PycharmProjects\scanner\videos\arla_film.mp4 -t video -show original -morph erosion -morphH 5 -morphW 5 -blur yes -morphH 5 -morphW 5
 # python preProcessing.py -m C:\Users\Augus\PycharmProjects\scanner\videos\images\arlamjolk2.png -t video -show original -morph erosion -morphH 5 -morphW 5 -blur yes -morphH 5 -morphW 5
+# python preProcessing.py -m C:\Users\Augus\PycharmProjects\scanner\images\mjolkny.jpg -t image -show original -bwl 70 -bwr 15 -bht 0 -bhb 40 -binarization yes -greyscale yes -b1 145 -b2 255 -morph erosion -morphH 3 -morphW 3 -blur no -oem 2 -psm 5
+# python preProcessing.py -m C:\Users\Augus\PycharmProjects\scanner\images\mjolkny.jpg -t image -show edited -bwl 70 -bwr 15 -bht 0 -bhb 40 -binarization yes -greyscale yes -b1 145 -b2 255 -morph erosion -morphH 3 -morphW 3 -blur no -oem 2 -psm 3
+
+
 
 # Parser arguments
 ap = argparse.ArgumentParser()
@@ -56,7 +60,7 @@ ap.add_argument("-imgH", "--targetH", type=int, default=500, help="nearest multi
 # Binarization
 ap.add_argument("-binarization", "--binarization", type=str, default="yes", help="Apply binarization, 'yes' or 'no'")
 ap.add_argument("-b1", "--bin1", type=int, default=140, help="Threshold 1")
-ap.add_argument("-b2", "--bin2", type=int, default=245, help="Threshold 2")
+ap.add_argument("-b2", "--bin2", type=int, default=255, help="Threshold 2")
 
 # Greyscaling
 ap.add_argument("-greyscale", "--greyscale", type=str, default="yes", help="Apply greyscale, 'yes' or 'no'")
@@ -78,9 +82,28 @@ ap.add_argument("-bhb", "--boxHB", type=int, default=35,
 # Tesserac OCR reader options
 ap.add_argument("-oem", "--oem", type=str, default="1",
                 help="OEM SELECTION, model")
+# 0 = Original Tesseract only.
+# 1 = Neural nets LSTM only.
+# 2 = Tesseract + LSTM.
+# 3 = Default, based on what is available.
+
 ap.add_argument("-psm", "--psm", type=str, default="1",
                 help="PSM SELECTION, read line")
-
+# 0 = Orientation and script detection (OSD) only.
+# 1 = Automatic page segmentation with OSD.
+# 2 = Automatic page segmentation, but no OSD, or OCR. (not implemented)
+# 3 = Fully automatic page segmentation, but no OSD. (Default)
+# 4 = Assume a single column of text of variable sizes.
+# 5 = Assume a single uniform block of vertically aligned text.
+# 6 = Assume a single uniform block of text.
+# 7 = Treat the image as a single text line.
+# 8 = Treat the image as a single word.
+# 9 = Treat the image as a single word in a circle.
+# 10 = Treat the image as a single character.
+# 11 = Sparse text. Find as much text as possible in no particular order.
+# 12 = Sparse text with OSD.
+# 13 = Raw line. Treat the image as a single text line,
+#      bypassing hacks that are Tesseract-specific.
 
 args = vars(ap.parse_args())
 borderType = cv2.BORDER_CONSTANT
@@ -136,20 +159,20 @@ if args["type"] == "video":
         crop_img = frame_resized[startH:endH, startW:endW]
 
         # Greysacle image
-        if args["greyscale"] is "yes":
+        if args["greyscale"] == "yes":
             crop_img = greyscale([args["gR"], args["gG"],args["gB"]], crop_img)
 
         # Binarization
-        if args["binarization"] is "yes":
+        if args["binarization"] == "yes":
             ret, thresh1 = cv2.threshold(crop_img, args["bin1"], args["bin2"], cv2.THRESH_BINARY)
             crop_img = cv2.merge((thresh1, thresh1, thresh1))
 
         # Morphology
-        if args["morph"] is not "none":
+        if args["morph"] != "none":
             crop_img = morphology(crop_img, iterations=1, flow=args["morph"], sizeW=args["morphW"] , sizeH=args["morphH"])
 
         # Blurring
-        if args["blur"] is "yes":
+        if args["blur"] == "yes":
             crop_img = cv2.blur(crop_img, (args["blurH"], args["blurW"]))
 
         # Pad image
@@ -222,27 +245,27 @@ else:
     crop_img = image_resized[startH:endH, startW:endW]
 
     # Greysacle image
-    if args["greyscale"] is "yes":
+    if args["greyscale"] == "yes":
         crop_img = greyscale([args["gR"], args["gG"], args["gB"]], crop_img)
 
     # Binarization
-    if args["binarization"] is "yes":
+    if args["binarization"] == "yes":
         ret, thresh1 = cv2.threshold(crop_img, args["bin1"], args["bin2"], cv2.THRESH_BINARY)
         crop_img = cv2.merge((thresh1, thresh1, thresh1))
 
     # Morphology
-    if args["morph"] is not "none":
+    if args["morph"] != "none":
         crop_img = morphology(crop_img, iterations=1, flow=args["morph"], sizeW=args["morphW"], sizeH=args["morphH"])
 
     # Blurring
-    if args["blur"] is "yes":
+    if args["blur"] == "yes":
         crop_img = cv2.blur(crop_img, (args["blurH"], args["blurW"]))
 
     # Pad image
     crop_img_padded = cv2.copyMakeBorder(crop_img, startH, int(H-endH), startW, int(W-endW), borderType, None, (255, 255, 255))
 
     # write box, on original image
-    cv2.rectangle(image, (int(startW*rW), int(startH*rH)), (int(endW*rW), int(endH*rH)), (0, 232, 0), 2)
+    cv2.rectangle(image, (int(startW*rW), int(startH*rH)), (int(endW*rW), int(endH*rH)), (0, 232, 0), 5)
 
     # Config for OCR reader
     # config = ("-l eng --oem " + args["oem"] + " --psm " + args["psm"] + " -c tessedit_char_whitelist=0123456789")
@@ -254,7 +277,7 @@ else:
 
     # Put text on image
     cv2.putText(image, text, (int(startW*rW), int(startH*rH) - 20),
-                cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
+                cv2.FONT_HERSHEY_SIMPLEX, 6, (0, 0, 255), 3)
 
 
     # display the text OCR'd by Tesseract
@@ -270,11 +293,46 @@ else:
     # cv2.imshow("car_wash", binaryImage)
 
     if args["show"] == "original":
-        cv2.imshow("Text detection", image)
+        (H, W) = image.shape[:2]
+        smaller = cv2.resize(image, (int(round(W / 5)), int(round(H / 5))))
+        cv2.imshow("Text detection", smaller)
         cv2.waitKey(0)
     if args["show"] == "edited":
         cv2.imshow("Text detection", crop_img_padded)
         cv2.waitKey(0)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
