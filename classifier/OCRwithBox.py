@@ -1,3 +1,12 @@
+# TODO add detection for video - done, needs to be tested
+# TODO add detection for image  - done, needs to be tested
+# TODO add streaming compatability - done, needs to be tested
+# TODO Clean up code afterwards, getting long need more functions/methods
+# TODO Add conditional, if text = detected -> perform OCR, add threshold as variable
+# TODO Add main function
+# TODO Write proper Readme
+# TODO add variable for greyscale of video detection algo?
+
 # import the necessary packages
 from imutils.object_detection import non_max_suppression
 import numpy as np
@@ -9,6 +18,7 @@ from imutils.video import VideoStream
 from imutils.video import FPS
 from imutils.object_detection import non_max_suppression
 import imutils
+import time
 
 
 def greyscale(coefficients, image):
@@ -94,6 +104,56 @@ def decode_predictions(scores, geometry):
 # python preProcessing.py -m C:\Users\Augus\PycharmProjects\scanner\images\mjolkny.jpg -t image -show original -bwl 70 -bwr 15 -bht 0 -bhb 40 -binarization yes -greyscale yes -b1 145 -b2 255 -morph erosion -morphH 3 -morphW 3 -blur no -oem 2 -psm 5
 # python preProcessing.py -m C:\Users\Augus\PycharmProjects\scanner\images\mjolkny.jpg -t image -show edited -bwl 70 -bwr 15 -bht 0 -bhb 40 -binarization yes -greyscale yes -b1 145 -b2 255 -morph erosion -morphH 3 -morphW 3 -blur no -oem 2 -psm 3
 
+
+# TODO Duplicated code remove
+# # Duplicated code
+# # Config for OCR reader
+# # config = ("-l eng --oem " + args["oem"] + " --psm " + args["psm"] + " -c tessedit_char_whitelist=0123456789")
+# config = ("-l eng --oem " + str(args["oem"]) + " --psm " + str(args["psm"]))
+
+# # text = pytesseract.image_to_string(roi, config=config)
+# text = pytesseract.image_to_string(crop_img_padded, config=config)
+
+# # Put text on image
+# cv2.putText(orig, text, (int(startW * rW), int(startH * rH) - 20),
+#         cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
+# if video
+# if args["show"] == "original":
+#     cv2.imshow("Text detection", orig)
+# if args["show"] == "edited":
+#     cv2.imshow("Text detection", crop_img_padded)
+
+# key = cv2.waitKey(1) & 0xFF
+
+# # display the text OCR'd by Tesseract
+# print(text)
+# If image
+# if args["show"] == "original":
+#     (H, W) = image.shape[:2]
+#     smaller = cv2.resize(image, (int(round(W / 5)), int(round(H / 5))))
+#     cv2.imshow("Text detection", smaller)
+#     cv2.waitKey(0)
+# if args["show"] == "edited":
+#     cv2.imshow("Text detection", crop_img_padded)
+#     cv2.waitKey(0)
+
+# TODO remove duplicated code
+# Greysacle image
+# if args["greyscale"] == "yes":
+#     crop_img = greyscale([args["gR"], args["gG"], args["gB"]], crop_img)
+#
+# # Binarization
+# if args["binarization"] == "yes":
+#     ret, thresh1 = cv2.threshold(crop_img, args["bin1"], args["bin2"], cv2.THRESH_BINARY)
+#     crop_img = cv2.merge((thresh1, thresh1, thresh1))
+
+# # Morphology
+# if args["morph"] != "none":
+#     crop_img = morphology(crop_img, iterations=1, flow=args["morph"], sizeW=args["morphW"], sizeH=args["morphH"])
+#
+# # Blurring
+# if args["blur"] == "yes":
+#     crop_img = cv2.blur(crop_img, (args["blurH"], args["blurW"]))
 
 
 # Parser arguments
@@ -184,18 +244,17 @@ ap.add_argument("-psm", "--psm", type=str, default="1", help="PSM SELECTION, rea
 args = vars(ap.parse_args())
 borderType = cv2.BORDER_CONSTANT
 
-# TODO add detection for video
-# TODO add detection for image
-# TODO add streaming compatability
-# TODO test
-# TODO add variable for greyscale of video detection algo?
-# TODO Add conditional for if video detect pict, send to tesserac this is going to be main thing later
-# TODO Clean up code afterwards, getting long need more functions/methods
-# Figure out if one should  extract a priori a little box in the center? - help as much as possible.
 
 if args["type"] == "video":
-    # Set up the video stream
-    vs = cv2.VideoCapture(args["media"])
+    # If video path is not supplied, grab the reference to the web cam
+    if not args.get("media", False):
+        print("[INFO] starting video stream...")
+        vs = VideoStream(src=0).start()
+        time.sleep(1.0)
+
+    # Otherwise, Grab a reference to the media file
+    else:
+        vs = cv2.VideoCapture(args["media"])
 
     # start the FPS throughput estimator
     fps = FPS().start()
@@ -215,6 +274,7 @@ if args["type"] == "video":
         frame = cv2.rotate(frame, rotateCode=cv2.ROTATE_90_CLOCKWISE)
         frame = imutils.resize(frame, width=600)
         orig = frame.copy()
+
         # Extract original sizes
         (origH, origW) = frame.shape[:2]
 
@@ -280,8 +340,6 @@ if args["type"] == "video":
             key = cv2.waitKey(1) & 0xFF
 
             # display the text OCR'd by Tesseract
-            # print("OCR TEXT")
-            # print("========")
             print(text)
 
             # if the `q` key was pressed, break from the loop
@@ -367,13 +425,11 @@ if args["type"] == "video":
                 roi = orig[startY:endY, startX:endX]
 
                 # White-Pad image
-                # crop_img_padded = cv2.copyMakeBorder(roi, startH, int(H - endH), startW, int(W - endW), borderType, # These should be as large as original image
-                #                                     None, (255, 255, 255))
                 crop_img_padded = cv2.copyMakeBorder(src=roi, top=int((H+(startY-endY)) / 2),
                                                      bottom=int((H-(startY-endY)) / 2),
-                                                     left=int(((W-(startX-endX)) / 2),
+                                                     left=int((W-(startX-endX)) / 2),
                                                               right=int((W+(startX-endX)) / 2),
-                                                              borderType, None, (255, 255, 255))
+                                                     borderType=borderType, None, (255, 255, 255))
 
                 # Config for OCR reader
                 # config = ("-l eng --oem " + args["oem"] + " --psm " + args["psm"] + " -c tessedit_char_whitelist=0123456789")
@@ -394,8 +450,6 @@ if args["type"] == "video":
                 key = cv2.waitKey(1) & 0xFF
 
                 # display the text OCR'd by Tesseract
-                # print("OCR TEXT")
-                # print("========")
                 print(text)
 
                 # if the `q` key was pressed, break from the loop
@@ -403,113 +457,188 @@ if args["type"] == "video":
                     break
 
 
+    # stop the timer and display FPS information
+    fps.stop()
+    print("[INFO] elasped time: {:.2f}".format(fps.elapsed()))
+    print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
+
+    # otherwise, release the file pointer
+    vs.release()
+
+    # close all windows
+    cv2.destroyAllWindows()
+
+if args["type"] == "image":
+    image = cv2.imread(args["media"])
+    orig = image.copy()
+
+    # Extract original sizes
+    (origH, origW) = image.shape[:2]
+
+    # Proportion of change
+    rW = origW / float(args["targetW"])
+    rH = origH / float(args["targetH"])
+
+    # Resize image
+    image_resized = cv2.resize(image, (args["targetW"], args["targetH"]))
+
+    # Extract new sizes
+    (H, W) = image_resized.shape[:2]
+
+    if args["detection"] == "pre-defined":
+        # Decide extracted box
+        startW, startH = int((W / 2) - args["boxWL"]), int((H / 2) - args["boxHT"])
+        endW, endH = int((W / 2) + args["boxWR"]), int((H / 2) + args["boxHB"])
+
+        # extract box
+        crop_img = image_resized[startH:endH, startW:endW]
+
+        # Greysacle image
+        if args["greyscale"] == "yes":
+            crop_img = greyscale([args["gR"], args["gG"], args["gB"]], crop_img)
+
+        # Binarization
+        if args["binarization"] == "yes":
+            ret, thresh1 = cv2.threshold(crop_img, args["bin1"], args["bin2"], cv2.THRESH_BINARY)
+            crop_img = cv2.merge((thresh1, thresh1, thresh1))
+
+        # Morphology
+        if args["morph"] != "none":
+            crop_img = morphology(crop_img, iterations=1, flow=args["morph"], sizeW=args["morphW"], sizeH=args["morphH"])
+
+        # Blurring
+        if args["blur"] == "yes":
+            crop_img = cv2.blur(crop_img, (args["blurH"], args["blurW"]))
+
+        # Pad image
+        crop_img_padded = cv2.copyMakeBorder(crop_img, startH, int(H - endH), startW, int(W - endW), borderType, None,
+                                             (255, 255, 255))
+
+        # write box, on original image
+        cv2.rectangle(image, (int(startW * rW), int(startH * rH)), (int(endW * rW), int(endH * rH)), (0, 232, 0), 5)
+
+        # Config for OCR reader
+        # config = ("-l eng --oem " + args["oem"] + " --psm " + args["psm"] + " -c tessedit_char_whitelist=0123456789")
+        config = ("-l eng --oem " + str(args["oem"]) + " --psm " + str(args["psm"]))
+
+        # text = pytesseract.image_to_string(roi, config=config)
+        text = pytesseract.image_to_string(crop_img_padded, config=config)
+        # testText = "test"
+
+        # Put text on image
+        cv2.putText(image, text, (int(startW * rW), int(startH * rH) - 20),
+                    cv2.FONT_HERSHEY_SIMPLEX, 6, (0, 0, 255), 3)
+
+        # display the text OCR'd by Tesseract
+        print(text)
+        # show the output image
+
+        if args["show"] == "original":
+            (H, W) = image.shape[:2]
+            smaller = cv2.resize(image, (int(round(W / 5)), int(round(H / 5))))
+            cv2.imshow("Text detection", smaller)
+            cv2.waitKey(0)
+        if args["show"] == "edited":
+            cv2.imshow("Text detection", crop_img_padded)
+            cv2.waitKey(0)
+
+    if args["detection"] == "detection":
+        # Read model
+        net = cv2.dnn.readNet(args["modelLoc"])
+
+        # define the two output layer names for the EAST detector model that
+        # we are interested -- the first is the output probabilities and the
+        # second can be used to derive the bounding box coordinates of text
+        layerNames = ["feature_fusion/Conv_7/Sigmoid", "feature_fusion/concat_3"]
+
+        # Greysacle image
+        if args["greyscale"] == "yes":
+            image_resized = greyscale([args["gR"], args["gG"], args["gB"]], image_resized)
+
+        # Binarization
+        if args["binarization"] == "yes":
+            ret, thresh1 = cv2.threshold(image_resized, args["bin1"], args["bin2"], cv2.THRESH_BINARY)
+            image_resized = cv2.merge((thresh1, thresh1, thresh1))
+
+        # Morphology
+        if args["morph"] != "none":
+            image_resized = morphology(image_resized, iterations=1, flow=args["morph"], sizeW=args["morphW"],
+                                       sizeH=args["morphH"])
+
+        # Blurring
+        if args["blur"] == "yes":
+            image_resized = cv2.blur(image_resized, (args["blurH"], args["blurW"]))
+
+        # Construct a blob from the frame and then perform a forward pass
+        blob = cv2.dnn.blobFromImage(image_resized, 1.0, (W, H),
+                                     # (123.68, 116.78, 103.94), # since greyscale
+                                     swapRB=True, crop=False)
+
+        # Make predictions
+        net.setInput(blob)
+        (scores, geometry) = net.forward(layerNames)
+
+        # Decode the predictions, then  apply non-maxima suppression to suppress weak, overlapping bounding boxes
+        (rects, confidences) = decode_predictions(scores, geometry)
+        boxes = non_max_suppression(np.array(rects), probs=confidences)
+
+        # initialize the list of results
+        results = []
+
+        # Loop over the bounding boxes
+        for (startX, startY, endX, endY) in boxes:
+
+            # Add padding on boxes
+            dX = int((endX - startX) * args["paddingW"])
+            dY = int((endY - startY) * args["paddingH"])
+
+            # apply padding to each side of the bounding box, respectively
+            startX = max(0, startX - dX)
+            startY = max(0, startY - dY)
+            endX = min(origW, endX + (dX * 2))
+            endY = min(origH, endY + (dY * 2))
+
+            # extract the actual padded ROI
+            roi = orig[startY:endY, startX:endX]
+
+            # White-Pad and center image
+            crop_img_padded = cv2.copyMakeBorder(src=roi, top=int((H + (startY - endY)) / 2),
+                                                 bottom=int((H - (startY - endY)) / 2),
+                                                 left=int((W - (startX - endX)) / 2),
+                                                          right=int((W + (startX - endX)) / 2),
+                                                          borderType=borderType, None, (255, 255, 255))
+
+            # Config for OCR reader
+            config = ("-l eng --oem " + str(args["oem"]) + " --psm " + str(args["psm"]))
+
+            # text = pytesseract.image_to_string(roi, config=config)
+            text = pytesseract.image_to_string(crop_img_padded, config=config)
+
+            # Put text on image
+            cv2.putText(orig, text, (int(startW * rW), int(startH * rH) - 20),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
 
 
-            # loop over the bounding boxes
-            for (startX, startY, endX, endY) in boxes:
-                # scale the bounding box coordinates based on the respective
-                # ratios
-                startX = int(startX * rW)
-                startY = int(startY * rH)
-                endX = int(endX * rW)
-                endY = int(endY * rH)
-                # draw the bounding box on the frame
-                cv2.rectangle(orig, (startX, startY), (endX, endY), (0, 255, 0), 2)
+            # display the text OCR'd by Tesseract
+            print(text)
+            # show the output image
+
+            if args["show"] == "original":
+                (H, W) = image.shape[:2]
+                smaller = cv2.resize(image, (int(round(W / 5)), int(round(H / 5))))
+                cv2.imshow("Text detection", smaller)
+                cv2.waitKey(0)
+            if args["show"] == "edited":
+                cv2.imshow("Text detection", crop_img_padded)
+                cv2.waitKey(0)
 
 
 
-# stop the timer and display FPS information
-fps.stop()
-print("[INFO] elasped time: {:.2f}".format(fps.elapsed()))
-print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
 
-# otherwise, release the file pointer
-vs.release()
 
-# close all windows
-cv2.destroyAllWindows()
 
-else:
-image = cv2.imread(args["media"])
-orig = image.copy()
-
-# Extract original sizes
-(origH, origW) = image.shape[:2]
-
-# Proportion of change
-rW = origW / float(args["targetW"])
-rH = origH / float(args["targetH"])
-
-# Resize image
-image_resized = cv2.resize(image, (args["targetW"], args["targetH"]))
-
-# Extract new sizes
-(H, W) = image_resized.shape[:2]
-
-if args["detection"] == "pre-defined":
-    # Decide extracted box
-    startW, startH = int((W / 2) - args["boxWL"]), int((H / 2) - args["boxHT"])
-    endW, endH = int((W / 2) + args["boxWR"]), int((H / 2) + args["boxHB"])
-
-    # extract box
-    crop_img = image_resized[startH:endH, startW:endW]
-
-    # Greysacle image
-    if args["greyscale"] == "yes":
-        crop_img = greyscale([args["gR"], args["gG"], args["gB"]], crop_img)
-
-    # Binarization
-    if args["binarization"] == "yes":
-        ret, thresh1 = cv2.threshold(crop_img, args["bin1"], args["bin2"], cv2.THRESH_BINARY)
-        crop_img = cv2.merge((thresh1, thresh1, thresh1))
-
-    # Morphology
-    if args["morph"] != "none":
-        crop_img = morphology(crop_img, iterations=1, flow=args["morph"], sizeW=args["morphW"], sizeH=args["morphH"])
-
-    # Blurring
-    if args["blur"] == "yes":
-        crop_img = cv2.blur(crop_img, (args["blurH"], args["blurW"]))
-
-    # Pad image
-    crop_img_padded = cv2.copyMakeBorder(crop_img, startH, int(H - endH), startW, int(W - endW), borderType, None,
-                                         (255, 255, 255))
-
-    # write box, on original image
-    cv2.rectangle(image, (int(startW * rW), int(startH * rH)), (int(endW * rW), int(endH * rH)), (0, 232, 0), 5)
-
-if args["detection"] == "detection":
-
-# Config for OCR reader
-# config = ("-l eng --oem " + args["oem"] + " --psm " + args["psm"] + " -c tessedit_char_whitelist=0123456789")
-config = ("-l eng --oem " + str(args["oem"]) + " --psm " + str(args["psm"]))
-
-# text = pytesseract.image_to_string(roi, config=config)
-text = pytesseract.image_to_string(crop_img_padded, config=config)
-# testText = "test"
-
-# Put text on image
-cv2.putText(image, text, (int(startW * rW), int(startH * rH) - 20),
-            cv2.FONT_HERSHEY_SIMPLEX, 6, (0, 0, 255), 3)
-
-# display the text OCR'd by Tesseract
-print("OCR TEXT")
-print("========")
-print(text)
-
-# show the output image
-# cv2.imshow("car_wash", crop_img)
-# cv2.imshow("car_wash", image_resized)
-# cv2.imshow("car_wash", crop_img_padded)
-# cv2.imshow("car_wash", image)
-# cv2.imshow("car_wash", binaryImage)
-
-if args["show"] == "original":
-    (H, W) = image.shape[:2]
-    smaller = cv2.resize(image, (int(round(W / 5)), int(round(H / 5))))
-    cv2.imshow("Text detection", smaller)
-    cv2.waitKey(0)
-if args["show"] == "edited":
-    cv2.imshow("Text detection", crop_img_padded)
-    cv2.waitKey(0)
-
+# def main():
+#     print("Hello World!")
+#
+# if __name__ == "__main__":
+#     main()
