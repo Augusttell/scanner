@@ -10,10 +10,11 @@ from imutils.video import FPS
 from imutils.object_detection import non_max_suppression
 import imutils
 
+
 def greyscale(coefficients, image):
     coefficients = np.array(coefficients).reshape((1, 3))
     greyImage = cv2.transform(image, coefficients)
-    return(greyImage)
+    return (greyImage)
 
 
 def morphology(image, flow, sizeW, sizeH, iterations=1):
@@ -26,65 +27,65 @@ def morphology(image, flow, sizeW, sizeH, iterations=1):
         resultImg = cv2.morphologyEx(image, cv2.MORPH_OPEN, kernel)
     if flow == "closing":
         resultImg = cv2.morphologyEx(image, cv2.MORPH_CLOSE, kernel)
-    return(resultImg)
+    return resultImg
 
 
 def decode_predictions(scores, geometry):
-	# grab the number of rows and columns from the scores volume, then
-	# initialize our set of bounding box rectangles and corresponding
-	# confidence scores
-	(numRows, numCols) = scores.shape[2:4]
-	rects = []
-	confidences = []
+    # grab the number of rows and columns from the scores volume, then
+    # initialize our set of bounding box rectangles and corresponding
+    # confidence scores
+    (numRows, numCols) = scores.shape[2:4]
+    rects = []
+    confidences = []
 
-	# loop over the number of rows
-	for y in range(0, numRows):
-		# extract the scores (probabilities), followed by the
-		# geometrical data used to derive potential bounding box
-		# coordinates that surround text
-		scoresData = scores[0, 0, y]
-		xData0 = geometry[0, 0, y]
-		xData1 = geometry[0, 1, y]
-		xData2 = geometry[0, 2, y]
-		xData3 = geometry[0, 3, y]
-		anglesData = geometry[0, 4, y]
+    # loop over the number of rows
+    for y in range(0, numRows):
+        # extract the scores (probabilities), followed by the
+        # geometrical data used to derive potential bounding box
+        # coordinates that surround text
+        scoresData = scores[0, 0, y]
+        xData0 = geometry[0, 0, y]
+        xData1 = geometry[0, 1, y]
+        xData2 = geometry[0, 2, y]
+        xData3 = geometry[0, 3, y]
+        anglesData = geometry[0, 4, y]
 
-		# loop over the number of columns
-		for x in range(0, numCols):
-			# if our score does not have sufficient probability,
-			# ignore it
-			if scoresData[x] < args["min_confidence"]:
-				continue
+        # loop over the number of columns
+        for x in range(0, numCols):
+            # if our score does not have sufficient probability,
+            # ignore it
+            if scoresData[x] < args["min_confidence"]:
+                continue
 
-			# compute the offset factor as our resulting feature
-			# maps will be 4x smaller than the input image
-			(offsetX, offsetY) = (x * 4.0, y * 4.0)
+            # compute the offset factor as our resulting feature
+            # maps will be 4x smaller than the input image
+            (offsetX, offsetY) = (x * 4.0, y * 4.0)
 
-			# extract the rotation angle for the prediction and
-			# then compute the sin and cosine
-			angle = anglesData[x]
-			cos = np.cos(angle)
-			sin = np.sin(angle)
+            # extract the rotation angle for the prediction and
+            # then compute the sin and cosine
+            angle = anglesData[x]
+            cos = np.cos(angle)
+            sin = np.sin(angle)
 
-			# use the geometry volume to derive the width and height
-			# of the bounding box
-			h = xData0[x] + xData2[x]
-			w = xData1[x] + xData3[x]
+            # use the geometry volume to derive the width and height
+            # of the bounding box
+            h = xData0[x] + xData2[x]
+            w = xData1[x] + xData3[x]
 
-			# compute both the starting and ending (x, y)-coordinates
-			# for the text prediction bounding box
-			endX = int(offsetX + (cos * xData1[x]) + (sin * xData2[x]))
-			endY = int(offsetY - (sin * xData1[x]) + (cos * xData2[x]))
-			startX = int(endX - w)
-			startY = int(endY - h)
+            # compute both the starting and ending (x, y)-coordinates
+            # for the text prediction bounding box
+            endX = int(offsetX + (cos * xData1[x]) + (sin * xData2[x]))
+            endY = int(offsetY - (sin * xData1[x]) + (cos * xData2[x]))
+            startX = int(endX - w)
+            startY = int(endY - h)
 
-			# add the bounding box coordinates and probability score
-			# to our respective lists
-			rects.append((startX, startY, endX, endY))
-			confidences.append(scoresData[x])
+            # add the bounding box coordinates and probability score
+            # to our respective lists
+            rects.append((startX, startY, endX, endY))
+            confidences.append(scoresData[x])
 
-	# return a tuple of the bounding boxes and associated confidences
-	return (rects, confidences)
+    # return a tuple of the bounding boxes and associated confidences
+    return (rects, confidences)
 
 
 # Example use
@@ -112,8 +113,10 @@ ap.add_argument("-blurH", "--blurH", type=int, default=5, help="Blur, Kernel wid
 ap.add_argument("-blurW", "--blurW", type=int, default=5, help="Blur, Kernel height")
 
 # Target image size
-ap.add_argument("-imgW", "--targetW", type=int, default=600, help="nearest multiple of 32 for resized width, do not change")
-ap.add_argument("-imgH", "--targetH", type=int, default=500, help="nearest multiple of 32 for resized height, do not change")
+ap.add_argument("-imgW", "--targetW", type=int, default=600,
+                help="nearest multiple of 32 for resized width, do not change")
+ap.add_argument("-imgH", "--targetH", type=int, default=500,
+                help="nearest multiple of 32 for resized height, do not change")
 
 # Binarization
 ap.add_argument("-binarization", "--binarization", type=str, default="yes", help="Apply binarization, 'yes' or 'no'")
@@ -126,8 +129,9 @@ ap.add_argument("-gR", "--gR", type=float, default=0.299, help="Greyscale, R")
 ap.add_argument("-gG", "--gG", type=float, default=0.587, help="Greyscale, G")
 ap.add_argument("-gB", "--gB", type=float, default=0.114, help="Greyscale, B")
 
-# Object detection or pre-defined box? 
-ap.add_argument("-detection", "--detection", type=str, default="pre-defined", help="Use 'pre-defined' or text 'detection' box")
+# Object detection or pre-defined box?
+ap.add_argument("-detection", "--detection", type=str, default="pre-defined",
+                help="Use 'pre-defined' or text 'detection' box")
 ap.add_argument("-dthresh", "--dthresh", type=float, default="pre-defined", help="Probability threshold for detection")
 
 # Box selection
@@ -140,6 +144,14 @@ ap.add_argument("-bht", "--boxHT", type=int, default=35,
                 help="Box height size, top")
 ap.add_argument("-bhb", "--boxHB", type=int, default=35,
                 help="Box height size, bottom")
+
+
+# Padding
+ap.add_argument("-paddingH", "--paddingH", type=float, default=0,
+                help="Additional padding for box when using detection")
+ap.add_argument("-paddingW", "--paddingW", type=float, default=0,
+                help="Additional padding for box when using detection")
+
 
 
 # Tesserac OCR reader options
@@ -172,8 +184,14 @@ ap.add_argument("-psm", "--psm", type=str, default="1", help="PSM SELECTION, rea
 args = vars(ap.parse_args())
 borderType = cv2.BORDER_CONSTANT
 
-        ### TODO add detection part
-        # Figure out if one should  extract a priori a little box in the center? - help as much as possible.  
+# TODO add detection for video
+# TODO add detection for image
+# TODO add streaming compatability
+# TODO test
+# TODO add variable for greyscale of video detection algo?
+# TODO Add conditional for if video detect pict, send to tesserac this is going to be main thing later
+# TODO Clean up code afterwards, getting long need more functions/methods
+# Figure out if one should  extract a priori a little box in the center? - help as much as possible.
 
 if args["type"] == "video":
     # Set up the video stream
@@ -192,11 +210,11 @@ if args["type"] == "video":
         # check to see if we have reached the end of the stream
         if frame is None:
             break
-        
+
         # resize the frame, maintaining the aspect ratio
         frame = cv2.rotate(frame, rotateCode=cv2.ROTATE_90_CLOCKWISE)
         frame = imutils.resize(frame, width=600)
-        orig=frame.copy()
+        orig = frame.copy()
         # Extract original sizes
         (origH, origW) = frame.shape[:2]
 
@@ -209,7 +227,7 @@ if args["type"] == "video":
 
         # Extract new sizes
         (H, W) = frame_resized.shape[:2]
-           
+
         if args["detection"] == "pre-defined":
             # Decide extracted box
             startW, startH = int((W / 2) - args["boxWL"]), int((H / 2) - args["boxHT"])
@@ -220,7 +238,7 @@ if args["type"] == "video":
 
             # Greysacle image
             if args["greyscale"] == "yes":
-                crop_img = greyscale([args["gR"], args["gG"],args["gB"]], crop_img)
+                crop_img = greyscale([args["gR"], args["gG"], args["gB"]], crop_img)
 
             # Binarization
             if args["binarization"] == "yes":
@@ -229,7 +247,8 @@ if args["type"] == "video":
 
             # Morphology
             if args["morph"] != "none":
-                crop_img = morphology(crop_img, iterations=1, flow=args["morph"], sizeW=args["morphW"] , sizeH=args["morphH"])
+                crop_img = morphology(crop_img, iterations=1, flow=args["morph"], sizeW=args["morphW"],
+                                      sizeH=args["morphH"])
 
             # Blurring
             if args["blur"] == "yes":
@@ -237,167 +256,260 @@ if args["type"] == "video":
 
             # Pad image
             crop_img_padded = cv2.copyMakeBorder(crop_img, startH, int(H - endH), startW, int(W - endW), borderType,
-                                             None, (255, 255, 255))
-            
+                                                 None, (255, 255, 255))
+
             # write box, on original image
             cv2.rectangle(orig, (int(startW * rW), int(startH * rH)), (int(endW * rW), int(endH * rH)), (0, 232, 0), 2)
 
-            
+            # Config for OCR reader
+            # config = ("-l eng --oem " + args["oem"] + " --psm " + args["psm"] + " -c tessedit_char_whitelist=0123456789")
+            config = ("-l eng --oem " + str(args["oem"]) + " --psm " + str(args["psm"]))
+
+            # text = pytesseract.image_to_string(roi, config=config)
+            text = pytesseract.image_to_string(crop_img_padded, config=config)
+
+            # Put text on image
+            cv2.putText(orig, text, (int(startW * rW), int(startH * rH) - 20),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
+
+            if args["show"] == "original":
+                cv2.imshow("Text detection", orig)
+            if args["show"] == "edited":
+                cv2.imshow("Text detection", crop_img_padded)
+
+            key = cv2.waitKey(1) & 0xFF
+
+            # display the text OCR'd by Tesseract
+            # print("OCR TEXT")
+            # print("========")
+            print(text)
+
+            # if the `q` key was pressed, break from the loop
+            if key == ord("q"):
+                break
+
         if args["detection"] == "detection":
-            decode_predictions
-        
-            net = cv2.dnn.readNet(args["modelLoc"]) # Read model
-            
-            
+
+            net = cv2.dnn.readNet(args["modelLoc"])  # Read model
+
             # define the two output layer names for the EAST detector model that
             # we are interested -- the first is the output probabilities and the
             # second can be used to derive the bounding box coordinates of text
             layerNames = ["feature_fusion/Conv_7/Sigmoid", "feature_fusion/concat_3"]
-            
-            
-            
+
+            # TODO insert pre-processing here?
+
+            # Greysacle image
+            if args["greyscale"] == "yes":
+                frame_resized = greyscale([args["gR"], args["gG"], args["gB"]], frame_resized)
+
+            # Binarization
+            if args["binarization"] == "yes":
+                ret, thresh1 = cv2.threshold(frame_resized, args["bin1"], args["bin2"], cv2.THRESH_BINARY)
+                frame_resized = cv2.merge((thresh1, thresh1, thresh1))
+
+            # Morphology
+            if args["morph"] != "none":
+                frame_resized = morphology(frame_resized, iterations=1, flow=args["morph"], sizeW=args["morphW"],
+                                      sizeH=args["morphH"])
+
+            # Blurring
+            if args["blur"] == "yes":
+                frame_resized = cv2.blur(frame_resized, (args["blurH"], args["blurW"]))
+
+            # of the model to obtain the two output layer sets
             # construct a blob from the frame and then perform a forward pass
-	        # of the model to obtain the two output layer sets
-	        blob = cv2.dnn.blobFromImage(frame, 1.0, (newW, newH),
-		        (123.68, 116.78, 103.94), swapRB=True, crop=False)
-	        net.setInput(blob)
-	        (scores, geometry) = net.forward(layerNames)
+            blob = cv2.dnn.blobFromImage(frame_resized, 1.0, (W, H),
+                                         #(123.68, 116.78, 103.94), # since greyscale
+                                         swapRB=True, crop=False)
+            # Parameters
+            #     images	input images (all with 1-, 3- or 4-channels).
+            #     size	spatial size for output image
+            #     mean	scalar with mean values which are subtracted from channels. Values are intended to be in (mean-R, mean-G, mean-B) order if image has BGR ordering and swapRB is true.
+            #     scalefactor	multiplier for images values.
+            #     swapRB	flag which indicates that swap first and last channels in 3-channel image is necessary.
+            #     crop	flag which indicates whether image will be cropped after resize or not
+            #     ddepth	Depth of output blob. Choose CV_32F or CV_8U.
 
-	        # decode the predictions, then  apply non-maxima suppression to
-	        # suppress weak, overlapping bounding boxes
-	        (rects, confidences) = decode_predictions(scores, geometry)
-	        boxes = non_max_suppression(np.array(rects), probs=confidences)
+            net.setInput(blob)
+            (scores, geometry) = net.forward(layerNames)
 
-	        # loop over the bounding boxes
-	        for (startX, startY, endX, endY) in boxes:
-		        # scale the bounding box coordinates based on the respective
-		        # ratios
-		        startX = int(startX * rW)
-		        startY = int(startY * rH)
-		        endX = int(endX * rW)
-		        endY = int(endY * rH)
-		        # draw the bounding box on the frame
-		        cv2.rectangle(orig, (startX, startY), (endX, endY), (0, 255, 0), 2)
+            # decode the predictions, then  apply non-maxima suppression to
+            # suppress weak, overlapping bounding boxes
+            (rects, confidences) = decode_predictions(scores, geometry)
+            boxes = non_max_suppression(np.array(rects), probs=confidences)
 
-        # Config for OCR reader
-        # config = ("-l eng --oem " + args["oem"] + " --psm " + args["psm"] + " -c tessedit_char_whitelist=0123456789")
-        config = ("-l eng --oem " + str(args["oem"]) + " --psm " + str(args["psm"]))
+            # initialize the list of results
+            results = []
 
-        # text = pytesseract.image_to_string(roi, config=config)
-        text = pytesseract.image_to_string(crop_img_padded, config=config)
+            # loop over the bounding boxes
+            for (startX, startY, endX, endY) in boxes:
+                # scale the bounding box coordinates based on the respective
+                # ratios
+                # startX = int(startX * rW)
+                # startY = int(startY * rH)
+                # endX = int(endX * rW)
+                # endY = int(endY * rH)
 
-        # Put text on image
-        cv2.putText(orig, text, (int(startW * rW), int(startH * rH) - 20),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
+                # in order to obtain a better OCR of the text we can potentially
+                # apply a bit of padding surrounding the bounding box -- here we
+                # are computing the deltas in both the x and y directions
+                dX = int((endX - startX) * args["paddingW"])
+                dY = int((endY - startY) * args["paddingH"])
 
-        if args["show"] == "original":
-            cv2.imshow("Text detection", orig)
-        if args["show"] == "edited":
-            cv2.imshow("Text detection", crop_img_padded)
+                # apply padding to each side of the bounding box, respectively
+                startX = max(0, startX - dX)
+                startY = max(0, startY - dY)
+                endX = min(origW, endX + (dX * 2))
+                endY = min(origH, endY + (dY * 2))
 
-        key = cv2.waitKey(1) & 0xFF
+                # extract the actual padded ROI
+                roi = orig[startY:endY, startX:endX]
 
-        # display the text OCR'd by Tesseract
-        #print("OCR TEXT")
-        #print("========")
-        print(text)
+                # White-Pad image
+                # crop_img_padded = cv2.copyMakeBorder(roi, startH, int(H - endH), startW, int(W - endW), borderType, # These should be as large as original image
+                #                                     None, (255, 255, 255))
+                crop_img_padded = cv2.copyMakeBorder(src=roi, top=int((H+(startY-endY)) / 2),
+                                                     bottom=int((H-(startY-endY)) / 2),
+                                                     left=int(((W-(startX-endX)) / 2),
+                                                              right=int((W+(startX-endX)) / 2),
+                                                              borderType, None, (255, 255, 255))
 
-        # if the `q` key was pressed, break from the loop
-        if key == ord("q"):
-            break
+                # Config for OCR reader
+                # config = ("-l eng --oem " + args["oem"] + " --psm " + args["psm"] + " -c tessedit_char_whitelist=0123456789")
+                config = ("-l eng --oem " + str(args["oem"]) + " --psm " + str(args["psm"]))
 
-    # stop the timer and display FPS information
-    fps.stop()
-    print("[INFO] elasped time: {:.2f}".format(fps.elapsed()))
-    print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
+                # text = pytesseract.image_to_string(roi, config=config)
+                text = pytesseract.image_to_string(crop_img_padded, config=config)
 
-    # otherwise, release the file pointer
-    vs.release()
+                # Put text on image
+                cv2.putText(orig, text, (int(startW * rW), int(startH * rH) - 20),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
 
-    # close all windows
-    cv2.destroyAllWindows()
+                if args["show"] == "original":
+                    cv2.imshow("Text detection", orig)
+                if args["show"] == "edited":
+                    cv2.imshow("Text detection", crop_img_padded)
+
+                key = cv2.waitKey(1) & 0xFF
+
+                # display the text OCR'd by Tesseract
+                # print("OCR TEXT")
+                # print("========")
+                print(text)
+
+                # if the `q` key was pressed, break from the loop
+                if key == ord("q"):
+                    break
+
+
+
+
+            # loop over the bounding boxes
+            for (startX, startY, endX, endY) in boxes:
+                # scale the bounding box coordinates based on the respective
+                # ratios
+                startX = int(startX * rW)
+                startY = int(startY * rH)
+                endX = int(endX * rW)
+                endY = int(endY * rH)
+                # draw the bounding box on the frame
+                cv2.rectangle(orig, (startX, startY), (endX, endY), (0, 255, 0), 2)
+
+
+
+# stop the timer and display FPS information
+fps.stop()
+print("[INFO] elasped time: {:.2f}".format(fps.elapsed()))
+print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
+
+# otherwise, release the file pointer
+vs.release()
+
+# close all windows
+cv2.destroyAllWindows()
 
 else:
-    image = cv2.imread(args["media"])
-    orig = image.copy()
+image = cv2.imread(args["media"])
+orig = image.copy()
 
-    # Extract original sizes
-    (origH, origW) = image.shape[:2]
+# Extract original sizes
+(origH, origW) = image.shape[:2]
 
-    # Proportion of change
-    rW = origW / float(args["targetW"])
-    rH = origH / float(args["targetH"])
+# Proportion of change
+rW = origW / float(args["targetW"])
+rH = origH / float(args["targetH"])
 
-    # Resize image
-    image_resized = cv2.resize(image, (args["targetW"], args["targetH"]))
+# Resize image
+image_resized = cv2.resize(image, (args["targetW"], args["targetH"]))
 
-    # Extract new sizes
-    (H, W) = image_resized.shape[:2]
+# Extract new sizes
+(H, W) = image_resized.shape[:2]
 
-    if args["detection"] == "pre-defined":
-        # Decide extracted box
-        startW, startH = int((W/2)-args["boxWL"]), int((H/2)-args["boxHT"])
-        endW, endH = int((W/2)+args["boxWR"]), int((H/2)+args["boxHB"])
+if args["detection"] == "pre-defined":
+    # Decide extracted box
+    startW, startH = int((W / 2) - args["boxWL"]), int((H / 2) - args["boxHT"])
+    endW, endH = int((W / 2) + args["boxWR"]), int((H / 2) + args["boxHB"])
 
-        # extract box
-        crop_img = image_resized[startH:endH, startW:endW]
+    # extract box
+    crop_img = image_resized[startH:endH, startW:endW]
 
-        # Greysacle image
-        if args["greyscale"] == "yes":
-            crop_img = greyscale([args["gR"], args["gG"], args["gB"]], crop_img)
+    # Greysacle image
+    if args["greyscale"] == "yes":
+        crop_img = greyscale([args["gR"], args["gG"], args["gB"]], crop_img)
 
-        # Binarization
-        if args["binarization"] == "yes":
-            ret, thresh1 = cv2.threshold(crop_img, args["bin1"], args["bin2"], cv2.THRESH_BINARY)
-            crop_img = cv2.merge((thresh1, thresh1, thresh1))
+    # Binarization
+    if args["binarization"] == "yes":
+        ret, thresh1 = cv2.threshold(crop_img, args["bin1"], args["bin2"], cv2.THRESH_BINARY)
+        crop_img = cv2.merge((thresh1, thresh1, thresh1))
 
-        # Morphology
-        if args["morph"] != "none":
-            crop_img = morphology(crop_img, iterations=1, flow=args["morph"], sizeW=args["morphW"], sizeH=args["morphH"])
+    # Morphology
+    if args["morph"] != "none":
+        crop_img = morphology(crop_img, iterations=1, flow=args["morph"], sizeW=args["morphW"], sizeH=args["morphH"])
 
-        # Blurring
-        if args["blur"] == "yes":
-            crop_img = cv2.blur(crop_img, (args["blurH"], args["blurW"]))
+    # Blurring
+    if args["blur"] == "yes":
+        crop_img = cv2.blur(crop_img, (args["blurH"], args["blurW"]))
 
-        # Pad image
-        crop_img_padded = cv2.copyMakeBorder(crop_img, startH, int(H-endH), startW, int(W-endW), borderType, None, (255, 255, 255))
-        
-        # write box, on original image
-        cv2.rectangle(image, (int(startW*rW), int(startH*rH)), (int(endW*rW), int(endH*rH)), (0, 232, 0), 5)
+    # Pad image
+    crop_img_padded = cv2.copyMakeBorder(crop_img, startH, int(H - endH), startW, int(W - endW), borderType, None,
+                                         (255, 255, 255))
 
-    if args["detection"] == "detection":
+    # write box, on original image
+    cv2.rectangle(image, (int(startW * rW), int(startH * rH)), (int(endW * rW), int(endH * rH)), (0, 232, 0), 5)
 
-    # Config for OCR reader
-    # config = ("-l eng --oem " + args["oem"] + " --psm " + args["psm"] + " -c tessedit_char_whitelist=0123456789")
-    config = ("-l eng --oem " + str(args["oem"]) + " --psm " + str(args["psm"]))
+if args["detection"] == "detection":
 
-    # text = pytesseract.image_to_string(roi, config=config)
-    text = pytesseract.image_to_string(crop_img_padded, config=config)
-    # testText = "test"
+# Config for OCR reader
+# config = ("-l eng --oem " + args["oem"] + " --psm " + args["psm"] + " -c tessedit_char_whitelist=0123456789")
+config = ("-l eng --oem " + str(args["oem"]) + " --psm " + str(args["psm"]))
 
-    # Put text on image
-    cv2.putText(image, text, (int(startW*rW), int(startH*rH) - 20),
-                cv2.FONT_HERSHEY_SIMPLEX, 6, (0, 0, 255), 3)
+# text = pytesseract.image_to_string(roi, config=config)
+text = pytesseract.image_to_string(crop_img_padded, config=config)
+# testText = "test"
 
+# Put text on image
+cv2.putText(image, text, (int(startW * rW), int(startH * rH) - 20),
+            cv2.FONT_HERSHEY_SIMPLEX, 6, (0, 0, 255), 3)
 
-    # display the text OCR'd by Tesseract
-    print("OCR TEXT")
-    print("========")
-    print(text)
+# display the text OCR'd by Tesseract
+print("OCR TEXT")
+print("========")
+print(text)
 
-    # show the output image
-    # cv2.imshow("car_wash", crop_img)
-    # cv2.imshow("car_wash", image_resized)
-    # cv2.imshow("car_wash", crop_img_padded)
-    # cv2.imshow("car_wash", image)
-    # cv2.imshow("car_wash", binaryImage)
+# show the output image
+# cv2.imshow("car_wash", crop_img)
+# cv2.imshow("car_wash", image_resized)
+# cv2.imshow("car_wash", crop_img_padded)
+# cv2.imshow("car_wash", image)
+# cv2.imshow("car_wash", binaryImage)
 
-    if args["show"] == "original":
-        (H, W) = image.shape[:2]
-        smaller = cv2.resize(image, (int(round(W / 5)), int(round(H / 5))))
-        cv2.imshow("Text detection", smaller)
-        cv2.waitKey(0)
-    if args["show"] == "edited":
-        cv2.imshow("Text detection", crop_img_padded)
-        cv2.waitKey(0)
+if args["show"] == "original":
+    (H, W) = image.shape[:2]
+    smaller = cv2.resize(image, (int(round(W / 5)), int(round(H / 5))))
+    cv2.imshow("Text detection", smaller)
+    cv2.waitKey(0)
+if args["show"] == "edited":
+    cv2.imshow("Text detection", crop_img_padded)
+    cv2.waitKey(0)
 
