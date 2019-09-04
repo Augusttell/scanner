@@ -1,3 +1,5 @@
+# TODO make sure first test case work 
+
 # TODO add detection for video - done, needs to be tested
 # TODO add detection for image  - done, needs to be tested
 # TODO add streaming compatability - done, needs to be tested
@@ -7,6 +9,26 @@
 # TODO Add main function
 # TODO Write proper Readme
 # TODO add variable for greyscale of video detection algo?
+
+### Example use / test cases ###
+## Test case 1, Video with Detection
+# python preProcessing.py -m C:\Users\Augus\PycharmProjects\scanner\videos\arla_film.mp4 -t video -show original -morph erosion -morphH 3 -morphW 3 -binarization yes -b1 140 -detection detection -tthresh 0.9 -dthresh 0.9  -bwl 70 -bwr 15 -bht 0 -bhb 40 -paddingH 1.05 -paddingW 1.05 -modelLoc C:\Users\Augus\PycharmProjects\scanner\opencv-text-recognition\frozen_east_text_detection.pb -oem 2 -psm 3
+
+## Test case 2, Video with box
+# python preProcessing.py -m C:\Users\Augus\PycharmProjects\scanner\videos\arla_film.mp4 -t video -show original -morph erosion -morphH 3 -morphW 3 -binarization yes -b1 140 -detection pre-defined -tthresh 0.9 -dthresh 0.9  -bwl 70 -bwr 15 -bht 0 -bhb 40 -oem 2 -psm 3
+
+## Test case 3, Image with detection
+# python preProcessing.py -m C:\Users\Augus\PycharmProjects\scanner\images\mjolkny.jpg -t image -show original -morph erosion -morphH 3 -morphW 3 -binarization yes -b1 140 -detection detection -tthresh 0.9 -dthresh 0.9 -paddingH 1.05 -paddingW 1.05 -modelLoc C:\Users\Augus\PycharmProjects\scanner\opencv-text-recognition\frozen_east_text_detection.pb -oem 2 -psm 3
+
+## Test case 4, Image with box
+# python preProcessing.py -m C:\Users\Augus\PycharmProjects\scanner\images\mjolkny.jpg -t image -show original -morph erosion -morphH 3 -morphW 3 -binarization yes -b1 140 -detection pre-defined -tthresh 0.9 -dthresh 0.9  -bwl 70 -bwr 15 -bht 0 -bhb 40 -oem 2 -psm 3
+
+## Test case 5, stream with detection
+# python preProcessing.py -t video -show original -morph erosion -morphH 3 -morphW 3 -binarization yes -b1 140 -detection detection -tthresh 0.9 -paddingH 1.05 -paddingW 1.05 -modelLoc C:\Users\Augus\PycharmProjects\scanner\opencv-text-recognition\frozen_east_text_detection.pb -oem 2 -psm 3
+
+## Test case 6, stream with box
+# python preProcessing.py -t video -show original -morph erosion -morphH 3 -morphW 3 -binarization yes -b1 140 -detection pre-defined -tthresh 0.9  -bwl 70 -bwr 15 -bht 0 -bhb 40 -oem 2 -psm 3
+
 
 # import the necessary packages
 from imutils.object_detection import non_max_suppression
@@ -20,6 +42,8 @@ from imutils.video import FPS
 from imutils.object_detection import non_max_suppression
 import imutils
 import time
+import pandas as pd
+import statistics as st
 
 
 def greyscale(coefficients, image):
@@ -41,7 +65,7 @@ def morphology(image, flow, sizeW, sizeH, iterations=1):
     return resultImg
 
 
-def decode_predictions(scores, geometry):
+def decode_predictions(scores, geometry, args):
     # grab the number of rows and columns from the scores volume, then
     # initialize our set of bounding box rectangles and corresponding
     # confidence scores
@@ -65,7 +89,7 @@ def decode_predictions(scores, geometry):
         for x in range(0, numCols):
             # if our score does not have sufficient probability,
             # ignore it
-            if scoresData[x] < args["min_confidence"]:
+            if scoresData[x] < args["dthresh"]:
                 continue
 
             # compute the offset factor as our resulting feature
@@ -108,6 +132,7 @@ def preprocessing(args, image):
     if args["binarization"] == "yes":
         ret, thresh1 = cv2.threshold(image, args["bin1"], args["bin2"], cv2.THRESH_BINARY)
         image = cv2.merge((thresh1, thresh1, thresh1))
+
     # th3 = cv.adaptiveThreshold(img,255,cv.ADAPTIVE_THRESH_GAUSSIAN_C,\
     # cv.THRESH_BINARY,11,2)
     # https://docs.opencv.org/3.4.0/d7/d1b/group__imgproc__misc.html#ga72b913f352e4a1b1b397736707afcde3
@@ -123,12 +148,13 @@ def preprocessing(args, image):
     return image
 
 
-def tesseractDisplay(args, origImage, image, scores, startW, startH, rW, rH):
+def tesseractDisplay(args, origImage, image, confidences, startW, startH, rW, rH):
     # Config file
     config = ("-l eng --oem " + str(args["oem"]) + " --psm " + str(args["psm"]))
 
     # Read frame/image
-    if mean(scores) >= args["tthresh"] and args["detection"] == "detection":
+    if any(prob >= args["tthresh"] for prob in scores[0][0]): #and args["detection"] == "detection": # TODO bug is here
+    # if st.mean(scores) >= args["tthresh"] and args["detection"] == "detection":
         text = pytesseract.image_to_string(image, config=config)
 
     if args["detection"] == "pre-defined":
@@ -160,20 +186,22 @@ def tesseractDisplay(args, origImage, image, scores, startW, startH, rW, rH):
 
     print(text)
 
-# Example use
-# python preProcessing.py -m C:\Users\Augus\PycharmProjects\scanner\videos\arla_film.mp4 -t video -show original -morph erosion -morphH 5 -morphW 5 -blur yes -morphH 5 -morphW 5
-# python preProcessing.py -m C:\Users\Augus\PycharmProjects\scanner\videos\images\arlamjolk2.png -t video -show original -morph erosion -morphH 5 -morphW 5 -blur yes -morphH 5 -morphW 5
-# python preProcessing.py -m C:\Users\Augus\PycharmProjects\scanner\images\mjolkny.jpg -t image -show original -bwl 70 -bwr 15 -bht 0 -bhb 40 -binarization yes -greyscale yes -b1 145 -b2 255 -morph erosion -morphH 3 -morphW 3 -blur no -oem 2 -psm 5
-# python preProcessing.py -m C:\Users\Augus\PycharmProjects\scanner\images\mjolkny.jpg -t image -show edited -bwl 70 -bwr 15 -bht 0 -bhb 40 -binarization yes -greyscale yes -b1 145 -b2 255 -morph erosion -morphH 3 -morphW 3 -blur no -oem 2 -psm 3
-
 
 ## Parser arguments
 ap = argparse.ArgumentParser()
 
+## Basic options
 # File locations and type
 ap.add_argument("-m", "--media", type=str, help="path to input media")
 ap.add_argument("-t", "--type", type=str, default="image", help="'video' or 'image'")
 ap.add_argument("-show", "--show", type=str, default="edited", help="Show 'original' or 'edited'")
+
+## Pre-processing
+# Target image size
+ap.add_argument("-imgW", "--targetW", type=int, default=608,
+                help="nearest multiple of 32 for resized width, do not change")
+ap.add_argument("-imgH", "--targetH", type=int, default=512,
+                help="nearest multiple of 32 for resized height, do not change")
 
 # Morphing with options
 ap.add_argument("-morph", "--morph", type=str, default="none", help="'erosion', 'dilation', 'opening' or 'closing'?")
@@ -184,12 +212,6 @@ ap.add_argument("-morphW", "--morphW", type=int, default=5, help="Morphoplogy, K
 ap.add_argument("-blur", "--blur", type=str, default="no", help="blur,'yes' or 'no'?")
 ap.add_argument("-blurH", "--blurH", type=int, default=5, help="Blur, Kernel width")
 ap.add_argument("-blurW", "--blurW", type=int, default=5, help="Blur, Kernel height")
-
-# Target image size
-ap.add_argument("-imgW", "--targetW", type=int, default=600,
-                help="nearest multiple of 32 for resized width, do not change")
-ap.add_argument("-imgH", "--targetH", type=int, default=500,
-                help="nearest multiple of 32 for resized height, do not change")
 
 # Binarization
 ap.add_argument("-binarization", "--binarization", type=str, default="yes", help="Apply binarization, 'yes' or 'no'")
@@ -202,13 +224,7 @@ ap.add_argument("-gR", "--gR", type=float, default=0.299, help="Greyscale, R")
 ap.add_argument("-gG", "--gG", type=float, default=0.587, help="Greyscale, G")
 ap.add_argument("-gB", "--gB", type=float, default=0.114, help="Greyscale, B")
 
-# Object detection or pre-defined box?
-ap.add_argument("-detection", "--detection", type=str, default="pre-defined",
-                help="Use 'pre-defined' or text 'detection' box")
-ap.add_argument("-dthresh", "--dthresh", type=float, default="pre-defined", help="Probability threshold for detection")
-ap.add_argument("-tthresh", "--tthresh", type=float, default="pre-defined", help="Probability threshold for tesserac activation")
-
-# Box selection
+# Box selection, when not using detection
 ap.add_argument("-bwl", "--boxWL", type=int, default=130,
                 help="Box width size, left")
 ap.add_argument("-bwr", "--boxWR", type=int, default=130,
@@ -219,26 +235,32 @@ ap.add_argument("-bht", "--boxHT", type=int, default=35,
 ap.add_argument("-bhb", "--boxHB", type=int, default=35,
                 help="Box height size, bottom")
 
-
-# Padding
-ap.add_argument("-paddingH", "--paddingH", type=float, default=0,
-                help="Additional padding for box when using detection")
-ap.add_argument("-paddingW", "--paddingW", type=float, default=0,
-                help="Additional padding for box when using detection")
-
-
-
+## Model specific
 # EAST model location
 ap.add_argument("-modelLoc", "--modelLoc", type=str, default="C:/Path/", help="Model location")
 
+# Object detection or pre-defined box?
+ap.add_argument("-detection", "--detection", type=str, default="pre-defined",
+                help="Use 'pre-defined' or text 'detection' box")
+# Threshold for box
+ap.add_argument("-dthresh", "--dthresh", type=float, default=0.9, help="Probability threshold for detection")
+ap.add_argument("-tthresh", "--tthresh", type=float, default=0.9, help="Probability threshold for tesserac activation")
+
+# Padding when using detection
+ap.add_argument("-paddingH", "--paddingH", type=float, default=0,
+                help="Additional padding for box when using detection, percentage")
+ap.add_argument("-paddingW", "--paddingW", type=float, default=0,
+                help="Additional padding for box when using detection, percentage")
+
 # Tesserac OCR reader options
-ap.add_argument("-oem", "--oem", type=str, default="1", help="OEM SELECTION, model")
+ap.add_argument("-oem", "--oem", type=str, default="2", help="OEM SELECTION, model")
+
 # 0 = Original Tesseract only.
 # 1 = Neural nets LSTM only.
 # 2 = Tesseract + LSTM.
 # 3 = Default, based on what is available.
 
-ap.add_argument("-psm", "--psm", type=str, default="1", help="PSM SELECTION, read line")
+ap.add_argument("-psm", "--psm", type=str, default="3", help="PSM SELECTION, read line")
 # 0 = Orientation and script detection (OSD) only.
 # 1 = Automatic page segmentation with OSD.
 # 2 = Automatic page segmentation, but no OSD, or OCR. (not implemented)
@@ -257,7 +279,6 @@ ap.add_argument("-psm", "--psm", type=str, default="1", help="PSM SELECTION, rea
 
 args = vars(ap.parse_args())
 borderType = cv2.BORDER_CONSTANT
-
 
 if args["type"] == "video":
     # If video path is not supplied, grab the reference to the web cam
@@ -314,7 +335,8 @@ if args["type"] == "video":
             preprocessedImage = preprocessing(args, crop_img)
 
             # Pad image
-            crop_img_padded = cv2.copyMakeBorder(preprocessedImage, startH, int(H - endH), startW, int(W - endW), borderType,
+            crop_img_padded = cv2.copyMakeBorder(preprocessedImage, startH, int(H - endH), startW, int(W - endW),
+                                                 borderType,
                                                  None, (255, 255, 255))
 
             # write box, on original image
@@ -340,7 +362,7 @@ if args["type"] == "video":
 
             # Construct a blob from the frame and then perform a forward pass
             blob = cv2.dnn.blobFromImage(preprocessedImage, 1.0, (W, H),
-                                         #(123.68, 116.78, 103.94), # since greyscale
+                                         # (123.68, 116.78, 103.94), # since greyscale
                                          swapRB=True, crop=False)
 
             net.setInput(blob)
@@ -348,7 +370,7 @@ if args["type"] == "video":
 
             # decode the predictions, then  apply non-maxima suppression to
             # suppress weak, overlapping bounding boxes
-            (rects, confidences) = decode_predictions(scores, geometry)
+            (rects, confidences) = decode_predictions(scores, geometry, args)
             boxes = non_max_suppression(np.array(rects), probs=confidences)
 
             # initialize the list of results
@@ -371,18 +393,17 @@ if args["type"] == "video":
                 roi = orig[startY:endY, startX:endX]
 
                 # White-Pad image
-                crop_img_padded = cv2.copyMakeBorder(src=roi, top=int((H+(startY-endY)) / 2),
-                                                     bottom=int((H-(startY-endY)) / 2),
-                                                     left=int((W-(startX-endX)) / 2),
-                                                              right=int((W+(startX-endX)) / 2),
-                                                     borderType=borderType, None, (255, 255, 255))
+                crop_img_padded = cv2.copyMakeBorder(src=roi, top=int((H + (startY - endY)) / 2),
+                                                     bottom=int((H - (startY - endY)) / 2),
+                                                     left=int((W - (startX - endX)) / 2),
+                                                     right=int((W + (startX - endX)) / 2),
+                                                     borderType=borderType, value=(255, 255, 255))
 
-                tesseractDisplay(args, orig, crop_img_padded, scores, startW, startH, rW, rH)
+                tesseractDisplay(args, orig, crop_img_padded, confidences, startX, startY, rW, rH)
 
                 # if the `q` key was pressed, break from the loop
                 if key == ord("q"):
                     break
-
 
     # stop the timer and display FPS information
     fps.stop()
@@ -455,7 +476,8 @@ if args["type"] == "image":
         (scores, geometry) = net.forward(layerNames)
 
         # Decode the predictions, then  apply non-maxima suppression to suppress weak, overlapping bounding boxes
-        (rects, confidences) = decode_predictions(scores, geometry)
+        (rects, confidences) = decode_predictions(scores, geometry, args)
+
         boxes = non_max_suppression(np.array(rects), probs=confidences)
 
         # initialize the list of results
@@ -463,7 +485,6 @@ if args["type"] == "image":
 
         # Loop over the bounding boxes
         for (startX, startY, endX, endY) in boxes:
-
             # Add padding on boxes
             dX = int((endX - startX) * args["paddingW"])
             dY = int((endY - startY) * args["paddingH"])
@@ -481,13 +502,13 @@ if args["type"] == "image":
             crop_img_padded = cv2.copyMakeBorder(src=roi, top=int((H + (startY - endY)) / 2),
                                                  bottom=int((H - (startY - endY)) / 2),
                                                  left=int((W - (startX - endX)) / 2),
-                                                          right=int((W + (startX - endX)) / 2),
-                                                          borderType=borderType, None, (255, 255, 255))
+                                                 right=int((W + (startX - endX)) / 2),
+                                                 borderType=borderType, value=(255, 255, 255))
 
-            tesseractDisplay(args, image, scores, startW, startH, rW, rH)
+            tesseractDisplay(args, image, confidences, startX, startY, rW, rH)
 
-# def main():
-#     print("Hello World!")
-#
-# if __name__ == "__main__":
-#     main()
+            # def main():
+            #     print("Hello World!")
+            #
+            # if __name__ == "__main__":
+            #     main()
