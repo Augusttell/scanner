@@ -93,8 +93,8 @@ class Classifier():
 #             image = cv2.imread(self.args["media"])
 #             image = Image.fromarray( ycc_uint8, "RGB" )
 
-        image = cv2.imread('../classifier/mjolkny.jpg')
-#         image = cv2.imwrite('input_image.jpg', im)
+        cv2.imwrite('input_image.jpg', im)
+        image = cv2.imread('input_image.jpg')
 
         orig = image.copy()
 
@@ -104,15 +104,12 @@ class Classifier():
         # Proportion of change
         rW = origW / float(self.args["targetW"])
         rH = origH / float(self.args["targetH"])
-        print('DONE')
 
         # Resize image
         image_resized = cv2.resize(image, (self.args["targetW"], self.args["targetH"]))
 
-        print('DONE')
         # Extract new sizes
         (H, W) = image_resized.shape[:2]
-        print('DONE')
 
         # Decide extracted box
         startW, startH = int((W/2)-self.args["boxWL"]), int((H/2) - self.args["boxHT"])
