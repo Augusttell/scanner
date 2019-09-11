@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='svinn_package',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x13image_service.proto\x12\rsvinn_package\"+\n\x0cImageRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05image\x18\x02 \x01(\x0c\",\n\rImageResponse\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05price\x18\x02 \x01(\x05\x32`\n\x0cImageService\x12P\n\rprocess_image\x12\x1b.svinn_package.ImageRequest\x1a\x1c.svinn_package.ImageResponse\"\x00(\x01\x30\x01\x62\x06proto3')
+  serialized_pb=_b('\n\x13image_service.proto\x12\rsvinn_package\"\\\n\x0cImageRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05image\x18\x02 \x01(\x0c\x12\r\n\x05width\x18\x03 \x01(\x05\x12\x0e\n\x06height\x18\x04 \x01(\x05\x12\x10\n\x08\x63hannels\x18\x05 \x01(\x05\",\n\rImageResponse\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05price\x18\x02 \x01(\x05\"6\n\x0eMatrix_Request\x12\x16\n\x0einternal_array\x18\x01 \x03(\x05\x12\x0c\n\x04name\x18\x02 \x01(\t2`\n\x0cImageService\x12P\n\rprocess_image\x12\x1b.svinn_package.ImageRequest\x1a\x1c.svinn_package.ImageResponse\"\x00(\x01\x30\x01\x62\x06proto3')
 )
 
 
@@ -47,6 +47,27 @@ _IMAGEREQUEST = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='width', full_name='svinn_package.ImageRequest.width', index=2,
+      number=3, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='height', full_name='svinn_package.ImageRequest.height', index=3,
+      number=4, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='channels', full_name='svinn_package.ImageRequest.channels', index=4,
+      number=5, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -60,7 +81,7 @@ _IMAGEREQUEST = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=38,
-  serialized_end=81,
+  serialized_end=130,
 )
 
 
@@ -97,12 +118,51 @@ _IMAGERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=83,
-  serialized_end=127,
+  serialized_start=132,
+  serialized_end=176,
+)
+
+
+_MATRIX_REQUEST = _descriptor.Descriptor(
+  name='Matrix_Request',
+  full_name='svinn_package.Matrix_Request',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='internal_array', full_name='svinn_package.Matrix_Request.internal_array', index=0,
+      number=1, type=5, cpp_type=1, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='name', full_name='svinn_package.Matrix_Request.name', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=178,
+  serialized_end=232,
 )
 
 DESCRIPTOR.message_types_by_name['ImageRequest'] = _IMAGEREQUEST
 DESCRIPTOR.message_types_by_name['ImageResponse'] = _IMAGERESPONSE
+DESCRIPTOR.message_types_by_name['Matrix_Request'] = _MATRIX_REQUEST
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 ImageRequest = _reflection.GeneratedProtocolMessageType('ImageRequest', (_message.Message,), {
@@ -119,6 +179,13 @@ ImageResponse = _reflection.GeneratedProtocolMessageType('ImageResponse', (_mess
   })
 _sym_db.RegisterMessage(ImageResponse)
 
+Matrix_Request = _reflection.GeneratedProtocolMessageType('Matrix_Request', (_message.Message,), {
+  'DESCRIPTOR' : _MATRIX_REQUEST,
+  '__module__' : 'image_service_pb2'
+  # @@protoc_insertion_point(class_scope:svinn_package.Matrix_Request)
+  })
+_sym_db.RegisterMessage(Matrix_Request)
+
 
 
 _IMAGESERVICE = _descriptor.ServiceDescriptor(
@@ -127,8 +194,8 @@ _IMAGESERVICE = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  serialized_start=129,
-  serialized_end=225,
+  serialized_start=234,
+  serialized_end=330,
   methods=[
   _descriptor.MethodDescriptor(
     name='process_image',

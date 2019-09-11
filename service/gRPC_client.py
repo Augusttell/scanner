@@ -27,8 +27,16 @@ class gRPCClient():
 def generateRequests():
     reqs = []
     for name, file in zip(['milk'],files):
-        im = cv2.imread(file).tostring() 
-        reqs.append(image_service_pb2.ImageRequest(name=name, image = im))
+        im = cv2.imread(file)
+        print(im.shape)
+        w,h,c = im.shape
+        byte_im = im.tostring()
+        reqs.append(image_service_pb2.ImageRequest(name=name, 
+                                                   image = byte_im,
+                                                   width = w,
+                                                   height= h,
+                                                   channels = c))
+#         reqs.append(image_service_pb2.MatrixRequest(name=name, image = im))
     for req in reqs:
         yield req
 #         time.sleep(random.uniform(1, 2))

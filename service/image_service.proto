@@ -18,9 +18,18 @@ service ImageService {
 message ImageRequest {
     string name = 1;
     bytes image = 2;
+    int32 width = 3;
+    int32 height = 4;
+    int32 channels = 5;
 }
 
 message ImageResponse {
     string name = 1;
     int32 price = 2;
+}
+
+
+message Matrix_Request {
+    repeated int32 internal_array = 1;
+    string name = 2;
 }
