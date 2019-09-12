@@ -1,4 +1,5 @@
 import time
+from datetime import date
 from concurrent import futures
 # import matplotlib.pyplot as plt
 
@@ -27,24 +28,32 @@ class gRPCServer(image_service_pb2_grpc.ImageServiceServicer):
     def process_image(self, request_iterator, context):
         for req in request_iterator:
             print(req.name)
+
             im_vec = np.frombuffer(req.image, dtype=np.uint8)
             im = im_vec.reshape(req.width, req.height, req.channels)
-            self.segmenting_image(im)
 
             classifier = Classifier()
-            pred = classifier.predict(im)
-            print(pred)
+            pred_text = classifier.predict(im)
 
-            yield image_service_pb2.ImageResponse(name=req.name, price=np.random.randint(100))
+            date = self.parse_text(pred_text)
+            print(date)
 
-    def segmenting_image(self, im):
-#         print(im) # do some image processing
-        print(im.shape)
-#         plt.imshow(im)
-#         plt.show()
-#         cv2.imshow('image',im)
-#         cv2.waitKey(0)
-#         cv2.destroyAllWindows()
+            price = self.get_price(date, product_id = 999)
+
+            yield image_service_pb2.ImageResponse(name=req.name, price=price)
+     
+    def parse_text(self, text):
+        print(text.split())
+        dates = ['0'+str(i) for i in range(1,10)] + [str(i) for i in range(10,32)]
+        today = date.today().strftime("%d/%m/%Y")[:2]
+        for word in text.split():
+            if word in dates and int(word) > int(today):
+                return word
+        print('Could not find a date in text...')
+        return today
+
+    def get_price(self, date, product_id):
+        return np.random.randint(100)
         
 def serve():
     server = grpc.server(

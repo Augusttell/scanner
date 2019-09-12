@@ -85,13 +85,9 @@ class Classifier():
         # boxWL, boxWR = 130, 130
         # boxHT, boxHB = 35, 25
 
-
         print(self.args)
 
     def predict(self, im):
-
-#             image = cv2.imread(self.args["media"])
-#             image = Image.fromarray( ycc_uint8, "RGB" )
 
         cv2.imwrite('input_image.jpg', im)
         image = cv2.imread('input_image.jpg')
@@ -138,12 +134,6 @@ class Classifier():
         # Put text on image
         cv2.putText(image, text, (int(startW*rW), int(startH*rH) - 20),
                     cv2.FONT_HERSHEY_SIMPLEX, 6, (0, 0, 255), 3)
-
-
-        # display the text OCR'd by Tesseract
-        print("OCR TEXT")
-        print("========")
-        print(text)
 
         # show the output image
         # cv2.imshow("car_wash", crop_img)
