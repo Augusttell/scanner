@@ -1,0 +1,23 @@
+type: google.api.Service
+config_version: 3
+
+#
+# Name of the service configuration.
+#
+name: svinnscanner.endpoints.scanner-252720.cloud.goog
+
+#
+# API title to appear in the user interface (Google Cloud Console).
+#
+title: Scanner gRPC API
+apis:
+- name: svinn_package.ImageService
+
+#
+# API usage restrictions.
+#
+usage:
+  rules:
+  # ListShelves methods can be called without an API Key.
+  - selector: svinn_package.ImageService.process_image
+    allow_unregistered_calls: true
