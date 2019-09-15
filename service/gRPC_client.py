@@ -8,7 +8,6 @@ import cv2
 import image_service_pb2 as image_service_pb2
 import image_service_pb2_grpc as image_service_pb2_grpc
 
-# files = ['data/cat1.png','data/cat2.png', 'data/cat3.png', '../classifier/mjolkny.jpg']
 files = ['../classifier/mjolkny.jpg']
 
 class gRPCClient():
@@ -36,10 +35,8 @@ def generateRequests():
                                                    width = w,
                                                    height= h,
                                                    channels = c))
-#         reqs.append(image_service_pb2.MatrixRequest(name=name, image = im))
     for req in reqs:
         yield req
-#         time.sleep(random.uniform(1, 2))
 
 
 def main():
