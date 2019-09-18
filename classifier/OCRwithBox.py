@@ -1,33 +1,31 @@
-# TODO make sure first test case work 
-
-# TODO add detection for video - done, needs to be tested
-# TODO add detection for image  - done, needs to be tested
-# TODO add streaming compatability - done, needs to be tested
-# TODO Add conditional, if text = detected -> perform OCR, add threshold as variable  - done, needs to be tested
+# TODO Deal with the multiple boxes per frame.
+# TODO Add conditional, if text = detected -> perform OCR, add threshold as variable  - done, needs to be tested TODO
 
 # TODO Add and test gaussian thresholding
+# TODO Fix breaking iside of loop
+
 # TODO Add main function
 # TODO Write proper Readme
 # TODO add variable for greyscale of video detection algo?
 
 ### Example use / test cases ###
-## Test case 1, Video with Detection
-# python preProcessing.py -m C:\Users\Augus\PycharmProjects\scanner\videos\arla_film.mp4 -t video -show original -morph erosion -morphH 3 -morphW 3 -binarization yes -b1 140 -detection detection -tthresh 0.9 -dthresh 0.9  -bwl 70 -bwr 15 -bht 0 -bhb 40 -paddingH 1.05 -paddingW 1.05 -modelLoc C:\Users\Augus\PycharmProjects\scanner\opencv-text-recognition\frozen_east_text_detection.pb -oem 2 -psm 3
+## Test case 1, Video with Detection, works
+# python preProcessing.py -m C:\Users\Augus\PycharmProjects\scanner\videos\arla_film.mp4 -t video -show original -morph erosion -morphH 3 -morphW 3 -binarization yes -b1 140 -detection detection -tthresh 2 -dthresh 0.9  -bwl 70 -bwr 15 -bht 0 -bhb 40 -paddingH 1.05 -paddingW 1.05 -modelLoc C:\Users\Augus\PycharmProjects\scanner\opencv-text-recognition\frozen_east_text_detection.pb -oem 2 -psm 3
 
-## Test case 2, Video with box
-# python preProcessing.py -m C:\Users\Augus\PycharmProjects\scanner\videos\arla_film.mp4 -t video -show original -morph erosion -morphH 3 -morphW 3 -binarization yes -b1 140 -detection pre-defined -tthresh 0.9 -dthresh 0.9  -bwl 70 -bwr 15 -bht 0 -bhb 40 -oem 2 -psm 3
+## Test case 2, Video with box, works
+# python preProcessing.py -m C:\Users\Augus\PycharmProjects\scanner\videos\arla_film.mp4 -t video -show original -morph erosion -morphH 3 -morphW 3 -binarization yes -b1 140 -detection pre-defined -tthresh 2 -dthresh 0.9  -bwl 70 -bwr 15 -bht 0 -bhb 40 -oem 2 -psm 3
 
-## Test case 3, Image with detection
-# python preProcessing.py -m C:\Users\Augus\PycharmProjects\scanner\images\mjolkny.jpg -t image -show original -morph erosion -morphH 3 -morphW 3 -binarization yes -b1 140 -detection detection -tthresh 0.9 -dthresh 0.9 -paddingH 1.05 -paddingW 1.05 -modelLoc C:\Users\Augus\PycharmProjects\scanner\opencv-text-recognition\frozen_east_text_detection.pb -oem 2 -psm 3
+## Test case 3, Image with detection, works
+# python preProcessing.py -m C:\Users\Augus\PycharmProjects\scanner\images\mjolkny.jpg -t image -show original -morph erosion -morphH 3 -morphW 3 -binarization yes -b1 140 -detection detection -tthresh 2 -dthresh 0.9 -paddingH 1.05 -paddingW 1.05 -modelLoc C:\Users\Augus\PycharmProjects\scanner\opencv-text-recognition\frozen_east_text_detection.pb -oem 2 -psm 3
 
-## Test case 4, Image with box
-# python preProcessing.py -m C:\Users\Augus\PycharmProjects\scanner\images\mjolkny.jpg -t image -show original -morph erosion -morphH 3 -morphW 3 -binarization yes -b1 140 -detection pre-defined -tthresh 0.9 -dthresh 0.9  -bwl 70 -bwr 15 -bht 0 -bhb 40 -oem 2 -psm 3
+## Test case 4, Image with box, works
+# python preProcessing.py -m C:\Users\Augus\PycharmProjects\scanner\images\mjolkny.jpg -t image -show original -morph erosion -morphH 3 -morphW 3 -binarization yes -b1 140 -detection pre-defined -tthresh 2 -dthresh 0.9  -bwl 70 -bwr 15 -bht 0 -bhb 40 -oem 2 -psm 3
 
-## Test case 5, stream with detection
-# python preProcessing.py -t video -show original -morph erosion -morphH 3 -morphW 3 -binarization yes -b1 140 -detection detection -tthresh 0.9 -paddingH 1.05 -paddingW 1.05 -modelLoc C:\Users\Augus\PycharmProjects\scanner\opencv-text-recognition\frozen_east_text_detection.pb -oem 2 -psm 3
+## Test case 5, stream with detection, works but very slow
+# python preProcessing.py -t video -show original -morph erosion -morphH 3 -morphW 3 -binarization yes -b1 140 -detection detection -tthresh 2 -paddingH 1.05 -paddingW 1.05 -modelLoc C:\Users\Augus\PycharmProjects\scanner\opencv-text-recognition\frozen_east_text_detection.pb -oem 2 -psm 3
 
-## Test case 6, stream with box
-# python preProcessing.py -t video -show original -morph erosion -morphH 3 -morphW 3 -binarization yes -b1 140 -detection pre-defined -tthresh 0.9  -bwl 70 -bwr 15 -bht 0 -bhb 40 -oem 2 -psm 3
+## Test case 6, stream with box, works well
+# python preProcessing.py -t video -show original -morph erosion -morphH 3 -morphW 3 -binarization yes -b1 140 -detection pre-defined -tthresh 2 -bwl 50 -bwr 50 -bht 20 -bhb 50 -oem 2 -psm 3
 
 
 # import the necessary packages
@@ -43,7 +41,7 @@ from imutils.object_detection import non_max_suppression
 import imutils
 import time
 import pandas as pd
-import statistics as st
+from itertools import chain
 
 
 def greyscale(coefficients, image):
@@ -153,24 +151,35 @@ def tesseractDisplay(args, origImage, image, confidences, startW, startH, rW, rH
     config = ("-l eng --oem " + str(args["oem"]) + " --psm " + str(args["psm"]))
 
     # Read frame/image
-    if any(prob >= args["tthresh"] for prob in scores[0][0]): #and args["detection"] == "detection": # TODO bug is here
-    # if st.mean(scores) >= args["tthresh"] and args["detection"] == "detection":
+    # print(scores[0][0])
+    # print(confidences)
+    #print(len(confidences))
+    text = ""
+    if "detection" == args["detection"] and len(confidences) > args["tthresh"]:
         text = pytesseract.image_to_string(image, config=config)
-
-    if args["detection"] == "pre-defined":
-        text = pytesseract.image_to_string(image, config=config)
-
-    if args["type"] == "video":
-        # Put text on image
         cv2.putText(origImage, text, (int(startW * rW), int(startH * rH) - 20),
                     cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
 
+    if args["detection"] == "pre-defined":
+        text = pytesseract.image_to_string(image, config=config)
+        cv2.putText(origImage, text, (int(startW * rW), int(startH * rH) - 20),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
+
+    if args["type"] == "video":
+        # Put text on image
         if args["show"] == "original":
             cv2.imshow("Text detection", origImage)
+            # key = cv2.waitKey(1) & 0xFF
+            # if the `q` key was pressed, break from the loop
+            # if key == ord("q"):
+            #     break
         if args["show"] == "edited":
             cv2.imshow("Text detection", image)
+            # key = cv2.waitKey(1) & 0xFF
+            # if the `q` key was pressed, break from the loop
+            # if key == ord("q"):
+            #     break
 
-        key = cv2.waitKey(1) & 0xFF
 
     if args["type"] == "image":
         if args["show"] == "original":
@@ -244,7 +253,7 @@ ap.add_argument("-detection", "--detection", type=str, default="pre-defined",
                 help="Use 'pre-defined' or text 'detection' box")
 # Threshold for box
 ap.add_argument("-dthresh", "--dthresh", type=float, default=0.9, help="Probability threshold for detection")
-ap.add_argument("-tthresh", "--tthresh", type=float, default=0.9, help="Probability threshold for tesserac activation")
+ap.add_argument("-tthresh", "--tthresh", type=int, default=2, help="Probability threshold for tesserac activation")
 
 # Padding when using detection
 ap.add_argument("-paddingH", "--paddingH", type=float, default=0,
@@ -342,9 +351,10 @@ if args["type"] == "video":
             # write box, on original image
             cv2.rectangle(orig, (int(startW * rW), int(startH * rH)), (int(endW * rW), int(endH * rH)), (0, 232, 0), 2)
 
-            tesseractDisplay(args, orig, crop_img_padded, scores, startW, startH, rW, rH)
+            tesseractDisplay(args, orig, crop_img_padded, None, startW, startH, rW, rH)
 
             # if the `q` key was pressed, break from the loop
+            key = cv2.waitKey(1) & 0xFF
             if key == ord("q"):
                 break
 
@@ -372,10 +382,13 @@ if args["type"] == "video":
             # suppress weak, overlapping bounding boxes
             (rects, confidences) = decode_predictions(scores, geometry, args)
             boxes = non_max_suppression(np.array(rects), probs=confidences)
-
-            # initialize the list of results
-            results = []
-
+            print(scores)
+            # print("score")
+            # print(len(scores))
+            # print("conf")
+            # print(len(confidences))
+            # print("box")
+            # print(len(boxes))
             # loop over the bounding boxes
             for (startX, startY, endX, endY) in boxes:
                 # Apply padding surrounding the bounding box -- here we
@@ -394,13 +407,20 @@ if args["type"] == "video":
 
                 # White-Pad image
                 crop_img_padded = cv2.copyMakeBorder(src=roi, top=int((H + (startY - endY)) / 2),
-                                                     bottom=int((H - (startY - endY)) / 2),
-                                                     left=int((W - (startX - endX)) / 2),
-                                                     right=int((W + (startX - endX)) / 2),
-                                                     borderType=borderType, value=(255, 255, 255))
+                                                    bottom=int((H - (startY - endY)) / 2),
+                                                    left=int((W - (startX - endX)) / 2),
+                                                    right=int((W + (startX - endX)) / 2),
+                                                    borderType=borderType, value=(255, 255, 255))
+
+                # cv2.imshow("Text detection", crop_img_padded)
+                cv2.rectangle(orig, (startX, startY), (endX, endY), (0, 255, 0), 2)
+                #cv2.imshow("Text detection", preprocessedImage)
+
+                # cv2.rectangle(orig, (int((W - (startX - endX)) / 2), int((H - (startY - endY)) / 2)),
+                #               (int((W + (startX - endX)) / 2), int((H + (startY - endY)) / 2)), (0, 232, 0), 2)
 
                 tesseractDisplay(args, orig, crop_img_padded, confidences, startX, startY, rW, rH)
-
+                key = cv2.waitKey(1) & 0xFF
                 # if the `q` key was pressed, break from the loop
                 if key == ord("q"):
                     break
@@ -450,9 +470,9 @@ if args["type"] == "image":
                                              None, (255, 255, 255))
 
         # write box, on original image
-        cv2.rectangle(image, (int(startW * rW), int(startH * rH)), (int(endW * rW), int(endH * rH)), (0, 232, 0), 5)
-
-        tesseractDisplay(args, orig, crop_img_padded, scores, startW, startH, rW, rH)
+        cv2.rectangle(orig, (int(startW * rW), int(startH * rH)), (int(endW * rW), int(endH * rH)), (0, 232, 0), 5)
+        # cv2.rectangle(orig, (int(startX * rW), int(startY * rH)), (int(endX * rW), int(endY * rH)), (0, 232, 0), 5)
+        tesseractDisplay(args, orig, crop_img_padded, None, startW, startH, rW, rH)
 
     if args["detection"] == "detection":
         # Read model
@@ -504,9 +524,11 @@ if args["type"] == "image":
                                                  left=int((W - (startX - endX)) / 2),
                                                  right=int((W + (startX - endX)) / 2),
                                                  borderType=borderType, value=(255, 255, 255))
-
-            tesseractDisplay(args, image, confidences, startX, startY, rW, rH)
-
+            cv2.rectangle(orig, (int(startX * rW), int(startY * rH)), (int(endX * rW), int(endY * rH)), (0, 232, 0), 5)
+           # cv2.imshow("Text detection", crop_img_padded)
+            # cv2.rectangle(orig, (startX*rW, startY*rH), (endX*rW, endY*rH), (0, 255, 0), 2)
+            #cv2.waitKey(100000)
+            tesseractDisplay(args, orig, crop_img_padded, confidences, startX, startY, rW, rH)
             # def main():
             #     print("Hello World!")
             #
