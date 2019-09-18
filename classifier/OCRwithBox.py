@@ -382,7 +382,7 @@ if args["type"] == "video":
             # suppress weak, overlapping bounding boxes
             (rects, confidences) = decode_predictions(scores, geometry, args)
             boxes = non_max_suppression(np.array(rects), probs=confidences)
-            print(scores)
+            # print(scores)
             # print("score")
             # print(len(scores))
             # print("conf")
@@ -406,7 +406,7 @@ if args["type"] == "video":
                 roi = orig[startY:endY, startX:endX]
 
                 # White-Pad image
-                crop_img_padded = cv2.copyMakeBorder(src=roi, top=int((H + (startY - endY)) / 2),
+                crop_img_padded = cv2.copyMakeBorder(src=preprocessedImage, top=int((H + (startY - endY)) / 2),
                                                     bottom=int((H - (startY - endY)) / 2),
                                                     left=int((W - (startX - endX)) / 2),
                                                     right=int((W + (startX - endX)) / 2),
@@ -519,7 +519,7 @@ if args["type"] == "image":
             roi = orig[startY:endY, startX:endX]
 
             # White-Pad and center image
-            crop_img_padded = cv2.copyMakeBorder(src=roi, top=int((H + (startY - endY)) / 2),
+            crop_img_padded = cv2.copyMakeBorder(src=preprocessedImage, top=int((H + (startY - endY)) / 2),
                                                  bottom=int((H - (startY - endY)) / 2),
                                                  left=int((W - (startX - endX)) / 2),
                                                  right=int((W + (startX - endX)) / 2),
