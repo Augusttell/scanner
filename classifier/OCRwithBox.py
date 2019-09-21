@@ -1,31 +1,31 @@
-# TODO Deal with the multiple boxes per frame.
-# TODO Add conditional, if text = detected -> perform OCR, add threshold as variable  - done, needs to be tested TODO
+# TODO Make preprocessing seperate for detection and recognition.
+    # TODO Experiment which thresholdType is best for gaussian and meanadaptive?
+    # TODO whihc is best for what?
+    # TODO best for detection =/= best for recognition
 
-# TODO Add and test gaussian thresholding
-# TODO Fix breaking iside of loop
-
+# TODO Time every component! Locate bottle neck for video!
 # TODO Add main function
 # TODO Write proper Readme
-# TODO add variable for greyscale of video detection algo?
+
 
 ### Example use / test cases ###
 ## Test case 1, Video with Detection, works
-# python preProcessing.py -m C:\Users\Augus\PycharmProjects\scanner\videos\arla_film.mp4 -t video -show original -morph erosion -morphH 3 -morphW 3 -binarization yes -b1 140 -detection detection -tthresh 2 -dthresh 0.9  -bwl 70 -bwr 15 -bht 0 -bhb 40 -paddingH 1.05 -paddingW 1.05 -modelLoc C:\Users\Augus\PycharmProjects\scanner\opencv-text-recognition\frozen_east_text_detection.pb -oem 2 -psm 3
+# python preProcessing.py -m C:\Users\Augus\PycharmProjects\scanner\videos\arla_film.mp4 -t video -show original -morph erosion -morphH 3 -morphW 3 -binarization global -b1 140 -detection detection  -dthresh 0.9  -bwl 70 -bwr 15 -bht 0 -bhb 40 -paddingH 1.05 -paddingW 1.05 -modelLoc C:\Users\Augus\PycharmProjects\scanner\opencv-text-recognition\frozen_east_text_detection.pb -oem 2 -psm 3
 
 ## Test case 2, Video with box, works
-# python preProcessing.py -m C:\Users\Augus\PycharmProjects\scanner\videos\arla_film.mp4 -t video -show original -morph erosion -morphH 3 -morphW 3 -binarization yes -b1 140 -detection pre-defined -tthresh 2 -dthresh 0.9  -bwl 70 -bwr 15 -bht 0 -bhb 40 -oem 2 -psm 3
+# python preProcessing.py -m C:\Users\Augus\PycharmProjects\scanner\videos\arla_film.mp4 -t video -show original -morph erosion -morphH 3 -morphW 3 -binarization global -b1 140 -detection pre-defined -dthresh 0.9  -bwl 70 -bwr 15 -bht 0 -bhb 40 -oem 2 -psm 3
 
 ## Test case 3, Image with detection, works
-# python preProcessing.py -m C:\Users\Augus\PycharmProjects\scanner\images\mjolkny.jpg -t image -show original -morph erosion -morphH 3 -morphW 3 -binarization yes -b1 140 -detection detection -tthresh 2 -dthresh 0.9 -paddingH 1.05 -paddingW 1.05 -modelLoc C:\Users\Augus\PycharmProjects\scanner\opencv-text-recognition\frozen_east_text_detection.pb -oem 2 -psm 3
+# python preProcessing.py -m C:\Users\Augus\PycharmProjects\scanner\images\mjolkny.jpg -t image -show original -morph erosion -morphH 3 -morphW 3 -binarization global -b1 140 -detection detection -dthresh 0.9 -paddingH 1.05 -paddingW 1.05 -modelLoc C:\Users\Augus\PycharmProjects\scanner\opencv-text-recognition\frozen_east_text_detection.pb -oem 2 -psm 3
 
 ## Test case 4, Image with box, works
-# python preProcessing.py -m C:\Users\Augus\PycharmProjects\scanner\images\mjolkny.jpg -t image -show original -morph erosion -morphH 3 -morphW 3 -binarization yes -b1 140 -detection pre-defined -tthresh 2 -dthresh 0.9  -bwl 70 -bwr 15 -bht 0 -bhb 40 -oem 2 -psm 3
+# python preProcessing.py -m C:\Users\Augus\PycharmProjects\scanner\images\mjolkny.jpg -t image -show original -morph erosion -morphH 3 -morphW 3 -binarization global -b1 140 -detection pre-defined -dthresh 0.9  -bwl 70 -bwr 15 -bht 0 -bhb 40 -oem 2 -psm 3
 
 ## Test case 5, stream with detection, works but very slow
-# python preProcessing.py -t video -show original -morph erosion -morphH 3 -morphW 3 -binarization yes -b1 140 -detection detection -tthresh 2 -paddingH 1.05 -paddingW 1.05 -modelLoc C:\Users\Augus\PycharmProjects\scanner\opencv-text-recognition\frozen_east_text_detection.pb -oem 2 -psm 3
+# python preProcessing.py -t video -show original -morph erosion -morphH 3 -morphW 3 -binarization global -b1 140 -detection detection 2 -paddingH 1.05 -paddingW 1.05 -modelLoc C:\Users\Augus\PycharmProjects\scanner\opencv-text-recognition\frozen_east_text_detection.pb -oem 2 -psm 3
 
 ## Test case 6, stream with box, works well
-# python preProcessing.py -t video -show original -morph erosion -morphH 3 -morphW 3 -binarization yes -b1 140 -detection pre-defined -tthresh 2 -bwl 50 -bwr 50 -bht 20 -bhb 50 -oem 2 -psm 3
+# python preProcessing.py -t video -show original -morph erosion -morphH 3 -morphW 3 -binarization global -b1 140 -detection pre-defined -bwl 50 -bwr 50 -bht 20 -bhb 50 -oem 2 -psm 3
 
 
 # import the necessary packages
@@ -127,13 +127,19 @@ def preprocessing(args, image):
         image = greyscale([args["gR"], args["gG"], args["gB"]], image)
 
     # Binarization
-    if args["binarization"] == "yes":
+    if args["binarization"] == "global":
         ret, thresh1 = cv2.threshold(image, args["bin1"], args["bin2"], cv2.THRESH_BINARY)
         image = cv2.merge((thresh1, thresh1, thresh1))
 
-    # th3 = cv.adaptiveThreshold(img,255,cv.ADAPTIVE_THRESH_GAUSSIAN_C,\
-    # cv.THRESH_BINARY,11,2)
-    # https://docs.opencv.org/3.4.0/d7/d1b/group__imgproc__misc.html#ga72b913f352e4a1b1b397736707afcde3
+    if args["binarization"] == "adaptMean":
+        thresh2 = cv2.adaptiveThreshold(image, 255, adaptiveMethod=cv2.ADAPTIVE_THRESH_MEAN_C,
+                                      thresholdType=cv2.THRESH_BINARY, blockSize=args["blockSize"], C=args["C"])
+        image = cv2.merge((thresh2, thresh2, thresh2))
+
+    if args["binarization"] == "adaptGauss":
+        thresh3 = cv2.adaptiveThreshold(image, 255, adaptiveMethod=cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                                      thresholdType=cv2.THRESH_BINARY, blockSize=args["blockSize"], C=args["C"])
+        image = cv2.merge((thresh3, thresh3, thresh3))
 
     # Morphology
     if args["morph"] != "none":
@@ -147,15 +153,12 @@ def preprocessing(args, image):
 
 
 def tesseractDisplay(args, origImage, image, confidences, startW, startH, rW, rH):
+
     # Config file
     config = ("-l eng --oem " + str(args["oem"]) + " --psm " + str(args["psm"]))
 
-    # Read frame/image
-    # print(scores[0][0])
-    # print(confidences)
-    #print(len(confidences))
     text = ""
-    if "detection" == args["detection"] and len(confidences) > args["tthresh"]:
+    if "detection" == args["detection"]:
         text = pytesseract.image_to_string(image, config=config)
         cv2.putText(origImage, text, (int(startW * rW), int(startH * rH) - 20),
                     cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
@@ -164,34 +167,6 @@ def tesseractDisplay(args, origImage, image, confidences, startW, startH, rW, rH
         text = pytesseract.image_to_string(image, config=config)
         cv2.putText(origImage, text, (int(startW * rW), int(startH * rH) - 20),
                     cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
-
-    if args["type"] == "video":
-        # Put text on image
-        if args["show"] == "original":
-            cv2.imshow("Text detection", origImage)
-            # key = cv2.waitKey(1) & 0xFF
-            # if the `q` key was pressed, break from the loop
-            # if key == ord("q"):
-            #     break
-        if args["show"] == "edited":
-            cv2.imshow("Text detection", image)
-            # key = cv2.waitKey(1) & 0xFF
-            # if the `q` key was pressed, break from the loop
-            # if key == ord("q"):
-            #     break
-
-
-    if args["type"] == "image":
-        if args["show"] == "original":
-            (H, W) = origImage.shape[:2]
-        smaller = cv2.resize(origImage, (int(round(W / 5)), int(round(H / 5))))
-        cv2.imshow("Text detection", smaller)
-        cv2.waitKey(0)
-        if args["show"] == "edited":
-            cv2.imshow("Text detection", image)
-        cv2.waitKey(0)
-
-        # display the text OCR'd by Tesseract
 
     print(text)
 
@@ -223,9 +198,11 @@ ap.add_argument("-blurH", "--blurH", type=int, default=5, help="Blur, Kernel wid
 ap.add_argument("-blurW", "--blurW", type=int, default=5, help="Blur, Kernel height")
 
 # Binarization
-ap.add_argument("-binarization", "--binarization", type=str, default="yes", help="Apply binarization, 'yes' or 'no'")
-ap.add_argument("-b1", "--bin1", type=int, default=140, help="Threshold 1")
-ap.add_argument("-b2", "--bin2", type=int, default=255, help="Threshold 2")
+ap.add_argument("-binarization", "--binarization", type=str, default="no", help="Binarization, 'no', 'global', 'adaptMean' or 'adaptGauss'")
+ap.add_argument("-b1", "--bin1", type=int, default=140, help="Threshold 1") # only used for global
+ap.add_argument("-b2", "--bin2", type=int, default=255, help="Threshold 2") # only used for global
+ap.add_argument("-blockSize", "--blockSize", type=int, default=11, help="Size of a pixel neighborhood that is used to calculate a threshold value for the pixel")
+ap.add_argument("-C", "--C", type=float, default=0, help="Constant subtracted from the mean or weighted mean")
 
 # Greyscaling
 ap.add_argument("-greyscale", "--greyscale", type=str, default="yes", help="Apply greyscale, 'yes' or 'no'")
@@ -253,7 +230,6 @@ ap.add_argument("-detection", "--detection", type=str, default="pre-defined",
                 help="Use 'pre-defined' or text 'detection' box")
 # Threshold for box
 ap.add_argument("-dthresh", "--dthresh", type=float, default=0.9, help="Probability threshold for detection")
-ap.add_argument("-tthresh", "--tthresh", type=int, default=2, help="Probability threshold for tesserac activation")
 
 # Padding when using detection
 ap.add_argument("-paddingH", "--paddingH", type=float, default=0,
@@ -353,6 +329,12 @@ if args["type"] == "video":
 
             tesseractDisplay(args, orig, crop_img_padded, None, startW, startH, rW, rH)
 
+            if args["show"] == "original":
+                cv2.imshow("Text detection", orig)
+
+            if args["show"] == "edited":
+                 cv2.imshow("Text detection", crop_img_padded)
+
             # if the `q` key was pressed, break from the loop
             key = cv2.waitKey(1) & 0xFF
             if key == ord("q"):
@@ -381,49 +363,39 @@ if args["type"] == "video":
             # decode the predictions, then  apply non-maxima suppression to
             # suppress weak, overlapping bounding boxes
             (rects, confidences) = decode_predictions(scores, geometry, args)
-            boxes = non_max_suppression(np.array(rects), probs=confidences)
-            # print(scores)
-            # print("score")
-            # print(len(scores))
-            # print("conf")
-            # print(len(confidences))
-            # print("box")
-            # print(len(boxes))
-            # loop over the bounding boxes
-            for (startX, startY, endX, endY) in boxes:
-                # Apply padding surrounding the bounding box -- here we
-                # are computing the deltas in both the x and y directions
-                dX = int((endX - startX) * args["paddingW"])
-                dY = int((endY - startY) * args["paddingH"])
+            boxes = non_max_suppression(np.array(rects), probs=confidences, overlapThresh=0.6)
 
-                # apply padding to each side of the bounding box, respectively
-                startX = max(0, startX - dX)
-                startY = max(0, startY - dY)
-                endX = min(origW, endX + (dX * 2))
-                endY = min(origH, endY + (dY * 2))
+            a = np.array(boxes)
 
-                # extract the actual padded ROI
-                roi = orig[startY:endY, startX:endX]
+            if len(boxes) >= 1:
+                (startX1, startY1, endX1, endY1)=np.amin(a[:, 0]), np.amin(a[:, 1]), np.amax(a[:, 2]), np.amax(a[:, 3])
 
-                # White-Pad image
-                crop_img_padded = cv2.copyMakeBorder(src=preprocessedImage, top=int((H + (startY - endY)) / 2),
-                                                    bottom=int((H - (startY - endY)) / 2),
-                                                    left=int((W - (startX - endX)) / 2),
-                                                    right=int((W + (startX - endX)) / 2),
+            crop_img_padded=preprocessedImage
+            # White-Pad image
+            if len(boxes) >= 1:
+                cv2.rectangle(orig, (int(startX1*rW), int(startY1*rH)), (int(endX1*rW), int(endY1*rH)), (0, 255, 0), 2)
+                crop_img = preprocessedImage[startY1:endY1, startX1:endX1]
+                crop_img_padded = cv2.copyMakeBorder(src=crop_img, top=int((H - (endY1-startY1)) / 2),
+                                                    bottom=int((H - (endY1-startY1 ) )/ 2),
+                                                    left=int((W - (endX1-startX1)) / 2),
+                                                    right=int((W - (endX1-startX1)) / 2),
                                                     borderType=borderType, value=(255, 255, 255))
 
-                # cv2.imshow("Text detection", crop_img_padded)
-                cv2.rectangle(orig, (startX, startY), (endX, endY), (0, 255, 0), 2)
-                #cv2.imshow("Text detection", preprocessedImage)
+                tesseractDisplay(args, orig, crop_img_padded, confidences, startX1, startY1, rW, rH)
 
-                # cv2.rectangle(orig, (int((W - (startX - endX)) / 2), int((H - (startY - endY)) / 2)),
-                #               (int((W + (startX - endX)) / 2), int((H + (startY - endY)) / 2)), (0, 232, 0), 2)
+            if args["show"] == "original":
+                cv2.imshow("Text detection", orig)
+                    # key = cv2.waitKey(1) & 0xFF
+                    # if the `q` key was pressed, break from the loop
+                    # if key == ord("q"):
+                    #     break
+            if args["show"] == "edited":
+                 cv2.imshow("Text detection", crop_img_padded)
 
-                tesseractDisplay(args, orig, crop_img_padded, confidences, startX, startY, rW, rH)
-                key = cv2.waitKey(1) & 0xFF
-                # if the `q` key was pressed, break from the loop
-                if key == ord("q"):
-                    break
+            key = cv2.waitKey(1) & 0xFF
+
+            if key == ord("q"):
+                break
 
     # stop the timer and display FPS information
     fps.stop()
@@ -474,6 +446,16 @@ if args["type"] == "image":
         # cv2.rectangle(orig, (int(startX * rW), int(startY * rH)), (int(endX * rW), int(endY * rH)), (0, 232, 0), 5)
         tesseractDisplay(args, orig, crop_img_padded, None, startW, startH, rW, rH)
 
+        if args["show"] == "original":
+            (H, W) = orig.shape[:2]
+            smaller = cv2.resize(orig, (int(round(W / 5)), int(round(H / 5))))
+            cv2.rectangle(smaller, (int((startW * rW)/5), int((startH * rH)/5)), (int((endW * rW)/5), int((endH * rH)/5))
+                          , (0, 255, 0), 2)
+            cv2.imshow("Text detection", smaller)
+        if args["show"] == "edited":
+            cv2.imshow("Text detection", crop_img_padded)
+        cv2.waitKey(0)
+
     if args["detection"] == "detection":
         # Read model
         net = cv2.dnn.readNet(args["modelLoc"])
@@ -500,37 +482,41 @@ if args["type"] == "image":
 
         boxes = non_max_suppression(np.array(rects), probs=confidences)
 
-        # initialize the list of results
-        results = []
+        a = np.array(boxes)
 
-        # Loop over the bounding boxes
-        for (startX, startY, endX, endY) in boxes:
-            # Add padding on boxes
-            dX = int((endX - startX) * args["paddingW"])
-            dY = int((endY - startY) * args["paddingH"])
+        if len(boxes) >= 1:
+            (startX1, startY1, endX1, endY1) = np.amin(a[:, 0]), np.amin(a[:, 1]), np.amax(a[:, 2]), np.amax(a[:, 3])
 
-            # apply padding to each side of the bounding box, respectively
-            startX = max(0, startX - dX)
-            startY = max(0, startY - dY)
-            endX = min(origW, endX + (dX * 2))
-            endY = min(origH, endY + (dY * 2))
-
-            # extract the actual padded ROI
-            roi = orig[startY:endY, startX:endX]
-
-            # White-Pad and center image
-            crop_img_padded = cv2.copyMakeBorder(src=preprocessedImage, top=int((H + (startY - endY)) / 2),
-                                                 bottom=int((H - (startY - endY)) / 2),
-                                                 left=int((W - (startX - endX)) / 2),
-                                                 right=int((W + (startX - endX)) / 2),
+        crop_img_padded = preprocessedImage
+        # White-Pad image
+        print(boxes)
+        if len(boxes) >= 1:
+            crop_img = preprocessedImage[startY1:endY1, startX1:endX1]
+            crop_img_padded = cv2.copyMakeBorder(src=crop_img, top=int((H - (endY1 - startY1)) / 2),
+                                                 bottom=int((H - (endY1 - startY1)) / 2),
+                                                 left=int((W - (endX1 - startX1)) / 2),
+                                                 right=int((W - (endX1 - startX1)) / 2),
                                                  borderType=borderType, value=(255, 255, 255))
-            cv2.rectangle(orig, (int(startX * rW), int(startY * rH)), (int(endX * rW), int(endY * rH)), (0, 232, 0), 5)
-           # cv2.imshow("Text detection", crop_img_padded)
-            # cv2.rectangle(orig, (startX*rW, startY*rH), (endX*rW, endY*rH), (0, 255, 0), 2)
-            #cv2.waitKey(100000)
-            tesseractDisplay(args, orig, crop_img_padded, confidences, startX, startY, rW, rH)
-            # def main():
-            #     print("Hello World!")
-            #
-            # if __name__ == "__main__":
-            #     main()
+
+            tesseractDisplay(args, orig, crop_img_padded, confidences, startX1, startY1, rW, rH)
+
+        if args["show"] == "original":
+            (H, W) = orig.shape[:2]
+            smaller = cv2.resize(orig, (int(round(W / 5)), int(round(H / 5))))
+            cv2.rectangle(smaller, (int((startX1 * rW)/5), int((startY1 * rH)/5)), (int((endX1 * rW)/5), int((endY1 * rH)/5)), (0, 255, 0),
+                          2)
+            cv2.imshow("Text detection", smaller)
+            cv2.waitKey(0)
+        if args["show"] == "edited":
+            cv2.imshow("Text detection", crop_img_padded)
+            cv2.waitKey(0)
+
+
+
+
+
+        # def main():
+        #     print("Hello World!")
+        #
+        # if __name__ == "__main__":
+        #     main()
