@@ -1,9 +1,12 @@
 # TODO Make preprocessing seperate for detection and recognition.
     # TODO Experiment which thresholdType is best for gaussian and meanadaptive?
-    # TODO whihc is best for what?
+    # TODO which is best for what?
     # TODO best for detection =/= best for recognition
 
 # TODO Time every component! Locate bottle neck for video!
+
+
+
 # TODO Add main function
 # TODO Write proper Readme
 
@@ -447,10 +450,14 @@ if args["type"] == "image":
         tesseractDisplay(args, orig, crop_img_padded, None, startW, startH, rW, rH)
 
         if args["show"] == "original":
-            (H, W) = orig.shape[:2]
-            smaller = cv2.resize(orig, (int(round(W / 5)), int(round(H / 5))))
-            cv2.rectangle(smaller, (int((startW * rW)/5), int((startH * rH)/5)), (int((endW * rW)/5), int((endH * rH)/5))
+            if len(boxes) >= 1:
+                (H, W) = orig.shape[:2]
+                smaller = cv2.resize(orig, (int(round(W / 5)), int(round(H / 5))))
+                cv2.rectangle(smaller, (int((startW * rW)/5), int((startH * rH)/5)), (int((endW * rW)/5), int((endH * rH)/5))
                           , (0, 255, 0), 2)
+            else:
+                (H, W) = orig.shape[:2]
+                smaller = cv2.resize(orig, (int(round(W / 5)), int(round(H / 5))))
             cv2.imshow("Text detection", smaller)
         if args["show"] == "edited":
             cv2.imshow("Text detection", crop_img_padded)
@@ -501,10 +508,14 @@ if args["type"] == "image":
             tesseractDisplay(args, orig, crop_img_padded, confidences, startX1, startY1, rW, rH)
 
         if args["show"] == "original":
-            (H, W) = orig.shape[:2]
-            smaller = cv2.resize(orig, (int(round(W / 5)), int(round(H / 5))))
-            cv2.rectangle(smaller, (int((startX1 * rW)/5), int((startY1 * rH)/5)), (int((endX1 * rW)/5), int((endY1 * rH)/5)), (0, 255, 0),
+            if len(boxes) >= 1:
+                (H, W) = orig.shape[:2]
+                smaller = cv2.resize(orig, (int(round(W / 5)), int(round(H / 5))))
+                cv2.rectangle(smaller, (int((startX1 * rW)/5), int((startY1 * rH)/5)), (int((endX1 * rW)/5), int((endY1 * rH)/5)), (0, 255, 0),
                           2)
+            else:
+                (H, W) = orig.shape[:2]
+                smaller = cv2.resize(orig, (int(round(W / 5)), int(round(H / 5))))
             cv2.imshow("Text detection", smaller)
             cv2.waitKey(0)
         if args["show"] == "edited":
