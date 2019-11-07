@@ -10,7 +10,7 @@ package svinn_package;
 
 service ImageService {
 
-    rpc process_image(stream ImageRequest) returns (stream ImageResponse) {
+    rpc process_image(ImageRequest) returns (ImageResponse) {
     }
 
 }
@@ -28,8 +28,3 @@ message ImageResponse {
     int32 price = 2;
 }
 
-
-message Matrix_Request {
-    repeated int32 internal_array = 1;
-    string name = 2;
-}

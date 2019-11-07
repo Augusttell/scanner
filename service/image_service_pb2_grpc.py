@@ -14,7 +14,7 @@ class ImageServiceStub(object):
     Args:
       channel: A grpc.Channel.
     """
-    self.process_image = channel.stream_stream(
+    self.process_image = channel.unary_unary(
         '/svinn_package.ImageService/process_image',
         request_serializer=image__service__pb2.ImageRequest.SerializeToString,
         response_deserializer=image__service__pb2.ImageResponse.FromString,
@@ -25,7 +25,7 @@ class ImageServiceServicer(object):
   # missing associated documentation comment in .proto file
   pass
 
-  def process_image(self, request_iterator, context):
+  def process_image(self, request, context):
     # missing associated documentation comment in .proto file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -35,7 +35,7 @@ class ImageServiceServicer(object):
 
 def add_ImageServiceServicer_to_server(servicer, server):
   rpc_method_handlers = {
-      'process_image': grpc.stream_stream_rpc_method_handler(
+      'process_image': grpc.unary_unary_rpc_method_handler(
           servicer.process_image,
           request_deserializer=image__service__pb2.ImageRequest.FromString,
           response_serializer=image__service__pb2.ImageResponse.SerializeToString,

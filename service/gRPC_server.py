@@ -14,7 +14,7 @@ from model import Classifier
 
 
 
-sleep = 60 * 60 * 24
+sleep = 1
 
 
 #-m mjolkny.jpg -t image -show edited -bwl 70 -bwr 15 -bht 0 -bhb 40 -binarization yes -greyscale yes -b1 145 -b2 255 -morph erosion -morphH 3 -morphW 3 -blur no -oem 2 -psm 3
@@ -23,24 +23,27 @@ sleep = 60 * 60 * 24
 class gRPCServer(image_service_pb2_grpc.ImageServiceServicer):
     def __init__(self):
         print('initializing server and model...')
-#         self.model = Classifier()
 
-    def process_image(self, request_iterator, context):
-        for req in request_iterator:
-            print(req.name)
+    def process_image(self, req, context):
+        start = time.time()
+        print("VM instance")
+        
+        print("processing...")
+        print(req.name)
 
-            im_vec = np.frombuffer(req.image, dtype=np.uint8)
-            im = im_vec.reshape(req.width, req.height, req.channels)
+        im_vec = np.frombuffer(req.image, dtype=np.uint8)
+        im = im_vec.reshape(req.width, req.height, req.channels)
 
-            classifier = Classifier()
-            pred_text = classifier.predict(im)
+        classifier = Classifier()
+        pred_text = classifier.predict(im)
 
-            date = self.parse_text(pred_text)
-            print(date)
+        date = self.parse_text(pred_text)
+        print(date)
 
-            price = self.get_price(date, product_id = 999)
+        price = self.get_price(date, product_id = 999)
 
-            yield image_service_pb2.ImageResponse(name=req.name, price=price)
+        print(time.time() - start)
+        return image_service_pb2.ImageResponse(name=req.name, price=99)
      
     def parse_text(self, text):
         print(text.split())
@@ -59,8 +62,8 @@ def serve():
     server = grpc.server(
             futures.ThreadPoolExecutor(max_workers=10),  
             options=[
-                        ('grpc.max_send_message_length', 100 * 1024 * 1024),
-                        ('grpc.max_receive_message_length', 100 * 1024 * 1024)
+                        ('grpc.max_send_message_length', 50 * 1024 * 1024),
+                        ('grpc.max_receive_message_length', 50 * 1024 * 1024)
                     ]
             )
 #     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
@@ -72,7 +75,7 @@ def serve():
     server.start()
     try:
         while True:
-            time.sleep(sleep)
+            pass #time.sleep(sleep)
     except KeyboardInterrupt:
         server.stop(0)
 
