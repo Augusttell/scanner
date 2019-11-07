@@ -11,8 +11,8 @@ from imutils.object_detection import non_max_suppression
 import imutils
 from PIL import Image
 
-tessdata_dir_config = r'--tessdata-dir "/usr/local/Cellar/tesseract/3.05.01/share/tessdata"'
-pytesseract.pytesseract.tesseract_cmd = r'/usr/local/Cellar/tesseract/4.1.0/bin/tesseract'
+#tessdata_dir_config = r'--tessdata-dir "/usr/local/Cellar/tesseract/3.05.01/share/tessdata"'
+#pytesseract.pytesseract.tesseract_cmd = r'/usr/local/Cellar/tesseract/4.1.0/bin/tesseract'
 
 
 
@@ -123,36 +123,12 @@ class Classifier():
         cv2.rectangle(image, (int(startW*rW), int(startH*rH)), (int(endW*rW), int(endH*rH)), (0, 232, 0), 5)
 
         # Config for OCR reader
-        # config = ("-l eng --oem " + self.args["oem"] + " --psm " + args["psm"] + " -c tessedit_char_whitelist=0123456789")
         config = ("-l eng --oem " + str(self.args["oem"]) + " --psm " + str(self.args["psm"]))
-    #     config = ("--oem " + str(self.args["oem"]) + " --psm " + str(args["psm"]))
 
-        # text = pytesseract.image_to_string(roi, config=config)
-        text = pytesseract.image_to_string(crop_img_padded, config=config)
-        # testText = "test"
-
-        # Put text on image
-        cv2.putText(image, text, (int(startW*rW), int(startH*rH) - 20),
-                    cv2.FONT_HERSHEY_SIMPLEX, 6, (0, 0, 255), 3)
-
-        # show the output image
-        # cv2.imshow("car_wash", crop_img)
-        # cv2.imshow("car_wash", image_resized)
-        # cv2.imshow("car_wash", crop_img_padded)
-        # cv2.imshow("car_wash", image)
-        # cv2.imshow("car_wash", binaryImage)
-
-
-#         if plot:
-#             if self.args["show"] == "original":
-#                 (H, W) = image.shape[:2]
-#                 smaller = cv2.resize(image, (int(round(W / 5)), int(round(H / 5))))
-#                 cv2.imshow("Text detection", smaller)
-#                 cv2.waitKey(0)
-#             if self.args["show"] == "edited":
-#                 cv2.imshow("Text detection", crop_img_padded)
-#                 cv2.waitKey(0)
-
+        print('hejhejhej')
+        text = pytesseract.image_to_string(crop_img_padded, config=config).encode("utf-8")
+        print(text)
+        
         return text
 
     def preprocessing(self, image):

@@ -18,6 +18,6 @@ apis:
 #
 usage:
   rules:
-  # ListShelves methods can be called without an API Key.
+  # process_images methods can be called without an API Key.
   - selector: svinn_package.ImageService.process_image
     allow_unregistered_calls: true

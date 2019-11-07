@@ -8,7 +8,6 @@ import cv2
 import image_service_pb2 as image_service_pb2
 import image_service_pb2_grpc as image_service_pb2_grpc
 
-files = ['../classifier/mjolkny.jpg']
 
 class gRPCClient():
     def __init__(self):
@@ -24,29 +23,26 @@ class gRPCClient():
 
 
 def generateRequests():
-    reqs = []
-    for name, file in zip(['milk'],files):
-        im = cv2.imread(file)
-        print(im.shape)
-        w,h,c = im.shape
-        byte_im = im.tostring()
-        reqs.append(image_service_pb2.ImageRequest(name=name, 
-                                                   image = byte_im,
-                                                   width = w,
-                                                   height= h,
-                                                   channels = c))
-    for req in reqs:
-        yield req
-
+    name = 'milk'
+    file = '../classifier/mjolkny.jpg'
+    im = cv2.imread(file)
+    print(im.shape)
+    w,h,c = im.shape
+    byte_im = im.tostring()
+    req = image_service_pb2.ImageRequest(name=name, 
+                                         image = byte_im,
+                                         width = w,
+                                         height= h,
+                                         channels = c)
+    return req
 
 def main():
     client = gRPCClient()
 
     response = client.sendRequest(generateRequests())
 
-    for re in response:
-        print(re)
-
+    print(response)
 
 if __name__ == '__main__':
     main()
+
